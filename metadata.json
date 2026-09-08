@@ -1,6 +1,6 @@
 {
   "name": "Pay Per View Content Platform",
-  "description": "Plataforma de monetización Pay Per View para videos y contenidos premium con pasarelas de pago y notificaciones por Gmail.",
+  "description": "Plataforma NeuraforgeAI con Agente de Inteligencia de Datos Aptos, scripts de monetización por clic (Noticias y Clima) con Google Analytics y AdSense.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

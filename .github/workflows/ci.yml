@@ -1,0 +1,42 @@
+name: CI - Lint, Test & Build Validation
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Production Readiness Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: TypeScript & Linting
+        run: npm run lint
+
+      - name: Run Automated Unit Tests (Vitest)
+        run: npm test
+
+      - name: Build Full-Stack Production Artifacts
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Verify Output Files
+        run: |
+          test -f dist/index.html || exit 1
+          test -f dist/server.cjs || exit 1
+          echo "✅ Production artifacts verified successfully (dist/index.html and dist/server.cjs present)."

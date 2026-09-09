@@ -1,0 +1,25 @@
+name: Deploy to Production (Render.com)
+
+on:
+  workflow_run:
+    workflows: ["CI - Lint, Test & Build Validation"]
+    branches: [main, master]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Trigger Render.com Production Deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Trigger Webhook Deploy
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "🚀 Triggering Render.com production deployment..."
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "✅ Deploy triggered successfully."
+          else
+            echo "ℹ️ RENDER_DEPLOY_HOOK_URL not configured. Add it in GitHub Settings > Secrets and variables > Actions."
+          fi

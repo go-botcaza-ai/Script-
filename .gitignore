@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+firebase-applet-config.json
+*.pem
+*.key
+.pytest_cache/
+__pycache__/
+

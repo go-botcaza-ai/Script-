@@ -3,13 +3,37 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import { validateEnvironment } from "./src/lib/envValidation";
+import { logger, createRateLimiter, securityHeadersMiddleware } from "./src/lib/serverSecurity";
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || "3000", 10);
+
+// Production Security Headers & CORS
+app.use(securityHeadersMiddleware);
+
+// Rate Limiter for API endpoints (120 req / min)
+app.use("/api", createRateLimiter(60000, 120));
 
 app.use(express.json());
+
+// Health & Readiness Endpoints
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+app.get("/api/health/ready", (req, res) => {
+  const validation = validateEnvironment();
+  const statusCode = validation.isProductionReady ? 200 : 200; // Return 200 with warnings
+  res.status(statusCode).json(validation);
+});
 
 // Initialize Gemini Client (lazy initialization)
 let aiClient: GoogleGenAI | null = null;
@@ -930,7 +954,12 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Aptos Data Agent Server running on http://0.0.0.0:${PORT}`);
+    const envStatus = validateEnvironment();
+    logger.info(`Server running on http://0.0.0.0:${PORT}`, {
+      environment: envStatus.environment,
+      productionReady: envStatus.isProductionReady,
+      configuredServices: envStatus.configuredServices,
+    });
   });
 }
 

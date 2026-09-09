@@ -15,6 +15,120 @@ Plataforma integral de inteligencia artificial on-chain, análisis de datos en t
 
 ---
 
+## ⚙️ Variables de Entorno (Environment Variables)
+
+Configura las siguientes variables en tu panel de Render.com o en tu archivo `.env` local (copiado desde `.env.example`):
+
+### 🔴 Variables Críticas / Requeridas
+| Variable | Tipo | Descripción | Ejemplo / Default |
+| :--- | :--- | :--- | :--- |
+| `GEMINI_API_KEY` | Requerida | Clave de API de Google Gemini para el Agente AI y Diagnósticos. | `AIzaSy...` ([Google AI Studio](https://aistudio.google.com/app/apikey)) |
+| `PORT` | Requerida | Puerto TCP donde escucha el servidor web (asignado por Render/Cloud Run). | `3000` |
+| `NODE_ENV` | Requerida | Entorno de ejecución (`production` o `development`). | `production` |
+
+### 🟢 Variables Opcionales (Con Valores por Defecto Seguros)
+| Variable | Tipo | Descripción | Default |
+| :--- | :--- | :--- | :--- |
+| `APTOS_NODE_URL` | Opcional | URL del Fullnode oficial de Aptos Mainnet. | `https://fullnode.mainnet.aptoslabs.com/v1` |
+| `APP_URL` | Opcional | URL canónica pública para Webhook de Telegram y CORS. | `https://go.botcaza.ai` |
+| `ADSENSE_PUBLISHER_ID` | Opcional | ID de editor AdSense para CPC y ads.txt. | `pub-9493850506792206` |
+| `GA4_MEASUREMENT_ID` | Opcional | ID de medición de Google Analytics 4. | `G-24Q6GBQN75` |
+| `TELEGRAM_BOT_TOKEN` | Opcional | Token de @BotFather para alertas automáticas y webhook del bot. | `123456:ABC...` |
+| `META_ACCESS_TOKEN` | Opcional | Token Graph API para WhatsApp Cloud API y Conversions API. | `EAAG...` |
+| `META_PHONE_NUMBER_ID` | Opcional | ID del número telefónico de WhatsApp Cloud API. | `1029384756` |
+| `META_PIXEL_ID` | Opcional | ID del Píxel de Meta Ads para eventos server-side (CAPI). | `987654321` |
+
+---
+
+## 🧪 Pruebas Automatizadas (Testing)
+
+El proyecto cuenta con una suite completa de pruebas unitarias automatizadas con **Vitest**:
+
+```bash
+# Ejecutar todas las pruebas una vez
+npm test
+
+# Ejecutar pruebas en modo observador (watch)
+npm run test:watch
+```
+
+Las pruebas validan:
+1. **Validación de Variables de Entorno (`envValidation.test.ts`):** Comprueba modos producción vs desarrollo, valores por defecto y detección de servicios.
+2. **Seguridad del Servidor & Rate Limiting (`serverSecurity.test.ts`):** Comprueba cabeceras HTTP de seguridad (CSP, nosniff, CORS) y bloqueo por rate limit (HTTP 429).
+3. **Criptografía & Formato Aptos (`aptosWallet.test.ts`):** Valida direcciones hexadecimales `0x`, conversión de Octas a APT y enlaces al explorador.
+4. **Telegram Mini App SDK (`telegramMiniApp.test.ts`):** Comprueba detección de entorno Telegram y lectura de datos de usuario.
+
+---
+
+## 🚀 Despliegue en Producción (Render.com Paso a Paso)
+
+El repositorio incluye `render.yaml` pre-configurado para desplegar con cero fricción:
+
+### Opción A: Despliegue de la Plataforma Web Completa (Recomendado)
+1. Inicia sesión en [Render.com](https://dashboard.render.com).
+2. Haz clic en **New +** &rarr; **Web Service**.
+3. Conecta tu repositorio de GitHub.
+4. Configura los siguientes campos:
+   - **Name:** `neuraforge-botcaza-web`
+   - **Environment:** `Node`
+   - **Region:** Elige la más cercana a tu audiencia (ej. `Frankfurt` o `Ohio`).
+   - **Branch:** `main` (o `master`)
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+5. En la sección **Environment Variables**, añade al menos:
+   - `GEMINI_API_KEY`: tu clave de API.
+   - `NODE_ENV`: `production`
+6. Haz clic en **Create Web Service**.
+
+### Opción B: Despliegue de la API Python Opcional (FastAPI / Gunicorn)
+Si creaste un servicio con entorno **Python 3**:
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `gunicorn app:app --bind 0.0.0.0:$PORT`
+*(Tanto `gunicorn` como `app.py` ya están integrados en el código).*
+
+---
+
+## 🔍 Monitoreo, Logs y Diagnóstico en Vivo
+
+### Endpoints de Salud y Diagnóstico
+* `GET /api/health` &rarr; Devuelve estado básico (`healthy`), uptime del proceso y timestamp.
+* `GET /api/health/ready` &rarr; Auditoría en tiempo real de preparación para producción: valida variables de entorno, servicios configurados y emite advertencias estructuradas.
+* `GET /api/telegram/status` &rarr; Estado de la integración con Telegram Mini App y bot.
+
+### Registro Centralizado (Structured Logging)
+El servidor utiliza logging estructurado con marcas de tiempo ISO y niveles de severidad (`[INFO]`, `[WARN]`, `[ERROR]`):
+```bash
+# Ver logs en vivo en Render.com
+render logs -s neuraforge-botcaza-web --tail
+```
+
+### Procedimiento de Rollback Inmediato
+Si un despliegue presenta inconvenientes en producción:
+1. **En Render.com:** Ve a la pestaña **Events** o **Deploys** de tu servicio y haz clic en **Rollback to this deploy** en la versión estable previa.
+2. **Vía Git:**
+   ```bash
+   git revert HEAD
+   git push origin main
+   ```
+   El flujo de CI/CD ejecutará los tests y activará el redespliegue automático.
+
+---
+
+## ✅ Checklist de Producción (Go-Live Audit)
+
+- [x] **1. Variables de Entorno Validadas:** Módulo `src/lib/envValidation.ts` y `.env.example` documentado.
+- [x] **2. Pruebas Unitarias Automatizadas:** Configurado Vitest con 4 suites y ejecución en CI (`npm test`).
+- [x] **3. CI/CD Automatizado:** Workflows `.github/workflows/ci.yml` y `deploy.yml`.
+- [x] **4. Gestión de Secretos:** `.gitignore` ignora `firebase-applet-config.json`, `.env*`, `*.pem`, `*.key`.
+- [x] **5. Unificación de Package Manager:** Eliminado `bun.lock`, estandarizado en `npm` y `package.json`.
+- [x] **6. Rate Limiting & Seguridad:** Middleware `createRateLimiter` (120 req/min) y cabeceras de seguridad activas.
+- [x] **7. Logging Estructurado:** Registros con ISO timestamp y contexto JSON en `serverSecurity.ts`.
+- [x] **8. Telegram Mini App (TMA):** SDK integrado, soporte de Haptic Feedback, MainButton y Webhook.
+- [x] **9. Botcaza Wallet Gateway:** Conexión nativa a colecciones de Firebase y nodo Aptos Mainnet.
+- [x] **10. Verificación de Build:** `npm run build` genera limpiamente `dist/index.html` y `dist/server.cjs`.
+
+---
+
 ## 🛠️ Tecnologías y Lenguajes Empleados
 
 Este repositorio combina múltiples capas tecnológicas diseñadas para alto rendimiento, seguridad y analítica a escala:

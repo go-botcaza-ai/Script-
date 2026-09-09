@@ -1,0 +1,13 @@
+# NeuraforgeAI & Botcaza - Aptos Intelligence & BigQuery Analytics
+# Render.com Python Environment Dependencies
+
+google-cloud-bigquery>=3.14.0
+google-genai>=0.1.0
+aptos-sdk>=0.6.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pandas>=2.1.0
+pyarrow>=14.0.0

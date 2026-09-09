@@ -1,0 +1,22 @@
+services:
+  # Servicio Web Principal (Node.js Full-Stack + Express + Vite Frontend)
+  - type: web
+    name: neuraforge-botcaza-web
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+
+  # Servicio Worker Python Opcional (usando requirements.txt)
+  # Actívalo si deseas un worker en segundo plano para BigQuery / Aptos
+  # - type: worker
+  #   name: neuraforge-aptos-python-worker
+  #   env: python
+  #   plan: free
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python worker.py

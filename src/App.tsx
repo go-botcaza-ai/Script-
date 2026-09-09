@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   LifeBuoy,
   Globe,
-  Wallet
+  Wallet,
+  Send
 } from 'lucide-react';
 import { ContentItem, PurchaseRecord, AccessTokenState } from './types';
 import { INITIAL_CONTENT, PHP_SCRIPT_CONFIG } from './data';
@@ -46,12 +47,15 @@ import { WebDiagnosticsErrors } from './components/WebDiagnosticsErrors';
 import { NeuraforgeSupportDesk } from './components/NeuraforgeSupportDesk';
 import { GrowthMarketingTrafficGuide } from './components/GrowthMarketingTrafficGuide';
 import { BotcazaWalletGatewayHub } from './components/BotcazaWalletGatewayHub';
+import { TelegramMiniAppHub } from './components/TelegramMiniAppHub';
+import { isInsideTelegram } from './lib/telegramWebApp';
 
 export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState<
     | 'data-agent'
     | 'wallet-gateway'
+    | 'telegram-miniapp'
     | 'monetization'
     | 'growth-marketing'
     | 'diagnostics'
@@ -117,6 +121,14 @@ export default function App() {
 
   // Init Google Auth listener on mount
   useEffect(() => {
+    // Auto-detect Telegram Mini App
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'telegram-miniapp' || urlParams.get('tgWebApp') === '1' || isInsideTelegram()) {
+        setActiveTab('telegram-miniapp');
+      }
+    }
+
     initAuth(
       (user, token) => {
         setAuthState({
@@ -263,6 +275,19 @@ export default function App() {
               </button>
 
               <button
+                id="nav-tab-telegram"
+                onClick={() => setActiveTab('telegram-miniapp')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  activeTab === 'telegram-miniapp'
+                    ? 'bg-[#0088cc] text-white shadow-xs'
+                    : 'text-zinc-400 hover:text-white border border-blue-500/30'
+                }`}
+              >
+                <Send className="w-3.5 h-3.5 text-[#29b6f6]" />
+                Telegram Mini App
+              </button>
+
+              <button
                 id="nav-tab-monetization"
                 onClick={() => setActiveTab('monetization')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -393,6 +418,14 @@ export default function App() {
             ⚡ Botcaza Wallet
           </button>
           <button
+            onClick={() => setActiveTab('telegram-miniapp')}
+            className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
+              activeTab === 'telegram-miniapp' ? 'bg-[#0088cc] text-white' : 'text-zinc-400'
+            }`}
+          >
+            📱 Telegram App
+          </button>
+          <button
             onClick={() => setActiveTab('monetization')}
             className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
               activeTab === 'monetization' ? 'bg-[#00ff9d] text-black' : 'text-zinc-400'
@@ -482,6 +515,19 @@ export default function App() {
             <BotcazaWalletGatewayHub
               userEmail={authState.userEmail || 'go.botcaza.ai@gmail.com'}
               onNavigateToCatalog={() => setActiveTab('catalog')}
+            />
+          </div>
+        )}
+
+        {/* TAB 1.7: TELEGRAM MINI APP (TMA) */}
+        {activeTab === 'telegram-miniapp' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <TelegramMiniAppHub
+              onOpenCheckout={(itemId) => {
+                const item = contentList.find((i) => i.id === itemId);
+                if (item) setActiveItemForCheckout(item);
+              }}
+              onNavigateToWallet={() => setActiveTab('wallet-gateway')}
             />
           </div>
         )}

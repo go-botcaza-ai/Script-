@@ -789,7 +789,130 @@ app.post("/api/meta/conversions", async (req, res) => {
 });
 
 // ==========================================
-// 5. Vite Middleware & Server Initialization
+// 5. Telegram Bot & Telegram Mini App (TMA) Endpoints
+// ==========================================
+
+// Check Telegram Bot and Mini App status
+app.get("/api/telegram/status", (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  res.json({
+    success: true,
+    botConfigured: !!token,
+    miniAppUrl: "https://go.botcaza.ai",
+    webhookUrl: "https://go.botcaza.ai/api/telegram/webhook",
+    commands: ["/start", "/wallet", "/alert", "/pay", "/help"],
+    features: {
+      telegramMiniApp: true,
+      hapticFeedback: true,
+      starsSupport: true,
+      botcazaWalletGateway: true,
+    }
+  });
+});
+
+// Telegram Bot Webhook (reception of user messages, /start, and Mini App launches)
+app.post("/api/telegram/webhook", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const update = req.body || {};
+  const message = update.message || update.edited_message;
+  const chatId = message?.chat?.id;
+  const text = message?.text || "";
+
+  // If token is configured and we received a message, send a response with the WebApp button
+  if (token && chatId) {
+    try {
+      const welcomeText = `🚀 *¡Bienvenido a Botcaza & Neuraforge AI Mini App\\!*
+      
+Ecosistema Web3 en Telegram:
+• 💳 *Botcaza Wallet*: Consulta de saldo Aptos y tokens Move
+• 🐋 *Alertas de Ballenas*: Monitoreo de transacciones mayores a 100,000 APT
+• ⚡ *Pay\\-Per\\-View*: Compra de análisis on\\-chain sin salir de Telegram`;
+
+      const tgPayload = {
+        chat_id: chatId,
+        text: welcomeText,
+        parse_mode: "MarkdownV2",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🚀 Abrir Botcaza Mini App",
+                web_app: { url: "https://go.botcaza.ai" },
+              },
+            ],
+            [
+              {
+                text: "💳 Mi Wallet",
+                web_app: { url: "https://go.botcaza.ai?tab=wallet-gateway" },
+              },
+              {
+                text: "🐋 Alertas Aptos",
+                web_app: { url: "https://go.botcaza.ai?tab=data-agent" },
+              },
+            ],
+          ],
+        },
+      };
+
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tgPayload),
+      });
+    } catch (tgErr) {
+      console.warn("[Telegram Webhook] Error enviando mensaje:", tgErr);
+    }
+  }
+
+  res.json({
+    ok: true,
+    status: "received",
+    chatId: chatId || "test_chat",
+    textReceived: text,
+    miniAppUrl: "https://go.botcaza.ai",
+  });
+});
+
+// Send notification alert to a Telegram channel or chat
+app.post("/api/telegram/send-alert", async (req, res) => {
+  const { chatId, message, alertType = "WHALE_ALERT" } = req.body;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (token && chatId) {
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message || `🚨 [Botcaza Whale Alert] Movimiento relevante en Aptos Mainnet. Abre la Mini App para ver el análisis.`,
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "⚡ Ver en Mini App", web_app: { url: "https://go.botcaza.ai" } }],
+            ],
+          },
+        }),
+      });
+      const data = await tgRes.json();
+      return res.json({ success: true, mode: "LIVE_TELEGRAM", data });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  res.json({
+    success: true,
+    mode: "SIMULATED_ALERT",
+    notice: "Alerta procesada. Para enviar a canales reales, añade TELEGRAM_BOT_TOKEN en las variables de entorno.",
+    chatId: chatId || "@botcaza_channel",
+    message,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ==========================================
+// 6. Vite Middleware & Server Initialization
 // ==========================================
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

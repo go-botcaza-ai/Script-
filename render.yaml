@@ -1,5 +1,6 @@
 services:
   # Servicio Web Principal (Node.js Full-Stack + Express + Vite Frontend)
+  # Selecciona 'Node' en Render si creas el servicio manualmente
   - type: web
     name: neuraforge-botcaza-web
     env: node
@@ -12,11 +13,17 @@ services:
       - key: PORT
         value: 3000
 
-  # Servicio Worker Python Opcional (usando requirements.txt)
-  # Actívalo si deseas un worker en segundo plano para BigQuery / Aptos
-  # - type: worker
-  #   name: neuraforge-aptos-python-worker
-  #   env: python
-  #   plan: free
-  #   buildCommand: pip install -r requirements.txt
-  #   startCommand: python worker.py
+  # Servicio Opcional Python Web / API (con Gunicorn + Flask / FastAPI)
+  # Si en Render elegiste 'Python 3', este es el comando que gunicorn necesita:
+  - type: web
+    name: neuraforge-botcaza-python-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 3000
+

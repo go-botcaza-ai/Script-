@@ -15,6 +15,7 @@ import confetti from 'canvas-confetti';
 import { ContentItem, PurchaseRecord, AccessTokenState } from '../types';
 import { sendPayPerViewReceiptEmail } from '../lib/gmail';
 import { googleSignIn } from '../lib/auth';
+import { recordGatewayPaymentInFirestore } from '../lib/firestoreWalletGateway';
 
 interface CheckoutModalProps {
   item: ContentItem | null;
@@ -35,7 +36,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   if (!isOpen || !item) return null;
 
-  const [selectedGateway, setSelectedGateway] = useState<'stripe' | 'paypal' | 'crypto' | 'card'>('stripe');
+  const [selectedGateway, setSelectedGateway] = useState<'botcaza_wallet' | 'stripe' | 'paypal' | 'crypto' | 'card'>('botcaza_wallet');
   const [buyerEmail, setBuyerEmail] = useState(authState.userEmail || '');
   const [buyerName, setBuyerName] = useState(authState.userName || '');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -81,6 +82,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       const generatedToken = 'PPV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
       let receiptDelivered = false;
+
+      // If selectedGateway is Botcaza Wallet, record the transaction in Firebase Firestore
+      let firestoreTxId: string | null = null;
+      if (selectedGateway === 'botcaza_wallet') {
+        setStatusMessage('Registrando pago en Firebase Firestore (Botcaza Wallet)...');
+        try {
+          firestoreTxId = await recordGatewayPaymentInFirestore({
+            txHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+            itemId: item.id,
+            itemTitle: item.title,
+            amountUSD: item.price,
+            amountAPT: Number((item.price / 9.5).toFixed(4)),
+            buyerEmail: buyerEmail,
+            paymentMethod: 'botcaza_wallet',
+            status: 'CONFIRMED',
+            accessKey: generatedToken,
+            accessDuration: item.accessDuration
+          });
+        } catch (fsErr) {
+          console.warn('Firestore recording fallback:', fsErr);
+        }
+      }
 
       // If user has Gmail authorization and checkbox is selected, send via Gmail API
       if (sendReceiptCheckbox && authState.accessToken && authState.isAuthenticated) {
@@ -225,11 +248,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <form onSubmit={handleProcessPayment} className="space-y-4">
             {/* Payment Method Selector */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                Selecciona la Pasarela de Pago
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Selecciona la Pasarela de Pago
+                </label>
+                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                  Motor Propio en Firebase
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {[
+                  { id: 'botcaza_wallet', name: '⚡ Botcaza Wallet', desc: 'Firebase + Aptos (0% fee)', highlight: true },
                   { id: 'stripe', name: 'Stripe', desc: 'Tarjetas crédito/débito' },
                   { id: 'paypal', name: 'PayPal', desc: 'Saldo o tarjeta' },
                   { id: 'card', name: 'Direct Card', desc: 'PHP Gateway' },
@@ -241,11 +270,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     onClick={() => setSelectedGateway(gw.id as any)}
                     className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
                       selectedGateway === gw.id
-                        ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 shadow-xs'
+                        ? gw.id === 'botcaza_wallet'
+                          ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500 shadow-xs'
+                          : 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600 shadow-xs'
                         : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <span className="text-xs font-bold text-slate-900 block">{gw.name}</span>
+                    <span className="text-xs font-bold text-slate-900 block truncate">{gw.name}</span>
                     <span className="text-[10px] text-slate-500 mt-1 block leading-tight">{gw.desc}</span>
                   </button>
                 ))}

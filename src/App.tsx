@@ -25,7 +25,8 @@ import {
   CloudSun,
   AlertTriangle,
   LifeBuoy,
-  Globe
+  Globe,
+  Wallet
 } from 'lucide-react';
 import { ContentItem, PurchaseRecord, AccessTokenState } from './types';
 import { INITIAL_CONTENT, PHP_SCRIPT_CONFIG } from './data';
@@ -44,11 +45,13 @@ import { MonetizedScriptsHub } from './components/MonetizedScriptsHub';
 import { WebDiagnosticsErrors } from './components/WebDiagnosticsErrors';
 import { NeuraforgeSupportDesk } from './components/NeuraforgeSupportDesk';
 import { GrowthMarketingTrafficGuide } from './components/GrowthMarketingTrafficGuide';
+import { BotcazaWalletGatewayHub } from './components/BotcazaWalletGatewayHub';
 
 export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState<
     | 'data-agent'
+    | 'wallet-gateway'
     | 'monetization'
     | 'growth-marketing'
     | 'diagnostics'
@@ -247,6 +250,19 @@ export default function App() {
               </button>
 
               <button
+                id="nav-tab-wallet-gateway"
+                onClick={() => setActiveTab('wallet-gateway')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  activeTab === 'wallet-gateway'
+                    ? 'bg-[#00ff9d] text-black shadow-xs'
+                    : 'text-zinc-400 hover:text-white border border-emerald-500/30'
+                }`}
+              >
+                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+                Botcaza Wallet Gateway
+              </button>
+
+              <button
                 id="nav-tab-monetization"
                 onClick={() => setActiveTab('monetization')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -369,6 +385,14 @@ export default function App() {
             Aptos Analytics
           </button>
           <button
+            onClick={() => setActiveTab('wallet-gateway')}
+            className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
+              activeTab === 'wallet-gateway' ? 'bg-[#00ff9d] text-black' : 'text-zinc-400'
+            }`}
+          >
+            ⚡ Botcaza Wallet
+          </button>
+          <button
             onClick={() => setActiveTab('monetization')}
             className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
               activeTab === 'monetization' ? 'bg-[#00ff9d] text-black' : 'text-zinc-400'
@@ -449,6 +473,16 @@ export default function App() {
                 }}
               />
             </div>
+          </div>
+        )}
+
+        {/* TAB 1.5: BOTCAZA WALLET & FIREBASE GATEWAY HUB */}
+        {activeTab === 'wallet-gateway' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <BotcazaWalletGatewayHub
+              userEmail={authState.userEmail || 'go.botcaza.ai@gmail.com'}
+              onNavigateToCatalog={() => setActiveTab('catalog')}
+            />
           </div>
         )}
 

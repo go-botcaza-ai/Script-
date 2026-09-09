@@ -133,13 +133,117 @@ export const GrowthMarketingTrafficGuide: React.FC = () => {
       {activePlatform === 'meta' && (
         <div className="space-y-6">
           <div className="p-5 rounded-xl bg-zinc-900/60 border border-blue-500/30 space-y-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-blue-400" />
-              Estrategia de Meta (Instagram Reels &amp; Anuncios en Facebook)
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-blue-400" />
+                Suite de APIs de Meta (WhatsApp Cloud API, Instagram, Facebook &amp; CAPI)
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-mono text-[10px] font-bold border border-blue-500/30">
+                Graph API v21.0 &bull; 100% Compatible
+              </span>
+            </div>
             <p className="text-xs text-zinc-300 leading-relaxed">
-              Meta es ideal para captar entusiastas cripto, inversores y desarrolladores con videos en formato vertical (9:16). Puedes usar tanto publicaciones orgánicas como campañas pagadas con objetivo "Tráfico al Sitio Web".
+              Sí, Meta es <strong className="text-white">totalmente compatible</strong> con este proyecto. Tu servidor Express y tus scripts de Python pueden interactuar directamente con la <strong>API oficial de WhatsApp Cloud</strong> para enviar alertas automáticas de ballenas Aptos, la <strong>API de Instagram</strong> para responder DMs en automático y la <strong>Conversions API (CAPI)</strong> para registrar ventas de Pay-Per-View sin ser bloqueado por AdBlock.
             </p>
+          </div>
+
+          {/* Sub-cards of Meta Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl bg-zinc-900/90 border border-emerald-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono font-bold">
+                <Smartphone className="w-4 h-4" />
+                <span>1. WhatsApp Cloud API</span>
+              </div>
+              <p className="text-[11px] text-zinc-300">
+                Envía alertas on-chain, notificaciones de cobro PPV y soporte automatizado 24/7 a cualquier número de WhatsApp en el mundo.
+              </p>
+              <div className="text-[10px] font-mono text-emerald-400/80 bg-black/50 p-2 rounded border border-emerald-500/20">
+                Endpoint: <code>/api/meta/send-whatsapp</code>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-zinc-900/90 border border-pink-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-pink-400 text-xs font-mono font-bold">
+                <Share2 className="w-4 h-4" />
+                <span>2. Instagram Graph API</span>
+              </div>
+              <p className="text-[11px] text-zinc-300">
+                Responde mensajes directos (DMs) automáticamente cuando alguien comente una palabra clave (ej. "APTOS") en tus Reels.
+              </p>
+              <div className="text-[10px] font-mono text-pink-400/80 bg-black/50 p-2 rounded border border-pink-500/20">
+                Webhook: <code>/api/meta/webhook</code>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-zinc-900/90 border border-blue-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-blue-400 text-xs font-mono font-bold">
+                <TrendingUp className="w-4 h-4" />
+                <span>3. Meta Conversions API (CAPI)</span>
+              </div>
+              <p className="text-[11px] text-zinc-300">
+                Registra compras y visitas directo desde el servidor hacia Meta Ads Manager, esquivando bloqueadores de publicidad de iOS y Android.
+              </p>
+              <div className="text-[10px] font-mono text-blue-400/80 bg-black/50 p-2 rounded border border-blue-500/20">
+                Endpoint: <code>/api/meta/conversions</code>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive WhatsApp & Meta Webhook Testing Card */}
+          <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4">
+            <h4 className="text-xs font-mono font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#00ff9d]" />
+              Herramienta de Prueba en Vivo &bull; Meta WhatsApp &amp; Webhook
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-3.5 rounded-lg bg-black border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-zinc-300">Generador "Click-to-WhatsApp" Viral:</span>
+                  <span className="text-[10px] text-emerald-400 font-mono">1 Clic para Compartir</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Usa este enlace en tus publicaciones de Instagram y Facebook para que la gente comparta tu plataforma por WhatsApp de inmediato:
+                </p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://wa.me/?text=%F0%9F%A4%96%20Mira%20esta%20IA%20gratuita%20para%20analizar%20la%20blockchain%20de%20Aptos%20en%20tiempo%20real%3A%20https%3A%2F%2Fgo.botcaza.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Compartir en WhatsApp</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <button
+                    onClick={() => handleCopy("https://wa.me/?text=%F0%9F%A4%96%20Mira%20esta%20IA%20gratuita%20para%20analizar%20la%20blockchain%20de%20Aptos%20en%20tiempo%20real%3A%20https%3A%2F%2Fgo.botcaza.ai", 'wa_link')}
+                    className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-mono text-zinc-300 cursor-pointer"
+                  >
+                    {copiedLink === 'wa_link' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-lg bg-black border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-zinc-300">URL del Webhook de Meta:</span>
+                  <span className="text-[10px] text-blue-400 font-mono">Para Meta Developers</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Esta es la URL que debes pegar en el panel de desarrolladores de Meta (developers.facebook.com) en la sección "Webhooks":
+                </p>
+                <div className="flex items-center justify-between p-2 rounded bg-zinc-950 font-mono text-[11px] text-blue-400 border border-zinc-800">
+                  <code className="truncate">https://go.botcaza.ai/api/meta/webhook</code>
+                  <button
+                    onClick={() => handleCopy("https://go.botcaza.ai/api/meta/webhook", 'webhook_url')}
+                    className="ml-2 px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] cursor-pointer"
+                  >
+                    {copiedLink === 'webhook_url' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -151,20 +255,24 @@ export const GrowthMarketingTrafficGuide: React.FC = () => {
               <div className="p-3 rounded-lg bg-black text-zinc-300 font-mono text-[11px] space-y-2 border border-zinc-800">
                 <p><strong className="text-amber-400">[0-3s Gancho]:</strong> "¿Sabías qué billetera movió 500,000 APT hace 10 minutos?"</p>
                 <p><strong className="text-cyan-400">[3-12s Demostración]:</strong> Muestras en pantalla grabando la interfaz de go.botcaza.ai consultando al Agente de IA en tiempo real.</p>
-                <p><strong className="text-emerald-400">[12-18s Llamada a la acción]:</strong> "Prueba la IA gratis en el enlace de nuestro perfil o en go.botcaza.ai".</p>
+                <p><strong className="text-emerald-400">[12-18s Llamada a la acción]:</strong> "Comenta APTOS y te enviamos el acceso gratis por WhatsApp o entra a go.botcaza.ai".</p>
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3 text-xs">
               <h4 className="font-bold text-blue-400 font-mono flex items-center gap-1.5">
                 <Share2 className="w-4 h-4" />
-                Configuración en Meta Business Manager:
+                Credenciales de Meta en tu Servidor (.env):
               </h4>
-              <ul className="space-y-2 text-zinc-300 list-disc list-inside">
-                <li><strong>Objetivo de Campaña:</strong> "Tráfico" o "Interacción".</li>
-                <li><strong>Segmentación de Audiencia:</strong> Intereses en Criptomonedas, Web3, Inteligencia Artificial, Finanzas y Tecnología.</li>
-                <li><strong>Ubicaciones:</strong> Instagram Stories &amp; Reels (pantalla vertical completa).</li>
-              </ul>
+              <p className="text-zinc-300 text-[11px]">
+                Para conectar tu cuenta de Meta Developers, solo agrega estas variables en tu entorno:
+              </p>
+              <div className="p-2.5 rounded bg-black font-mono text-[10px] text-zinc-400 border border-zinc-800 space-y-0.5">
+                <p><span className="text-blue-400">META_ACCESS_TOKEN</span>=EAAX... (Token de Sistema)</p>
+                <p><span className="text-emerald-400">META_PHONE_NUMBER_ID</span>=1029384756... (WhatsApp)</p>
+                <p><span className="text-purple-400">META_VERIFY_TOKEN</span>=neuraforge_botcaza_secure_token</p>
+                <p><span className="text-amber-400">META_PIXEL_ID</span>=1234567890 (Pixel de CAPI)</p>
+              </div>
             </div>
           </div>
 

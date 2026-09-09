@@ -636,7 +636,160 @@ app.post("/api/support/ticket", (req, res) => {
 });
 
 // ==========================================
-// 4. Vite Middleware & Server Initialization
+// 4. Meta APIs (WhatsApp Cloud API, Instagram, Facebook & Conversions API)
+// ==========================================
+
+// Check Meta API status
+app.get("/api/meta/status", (req, res) => {
+  const hasToken = !!process.env.META_ACCESS_TOKEN;
+  const hasPhoneId = !!process.env.META_PHONE_NUMBER_ID;
+  const hasPixel = !!process.env.META_PIXEL_ID;
+  const hasVerifyToken = !!process.env.META_VERIFY_TOKEN;
+
+  res.json({
+    success: true,
+    configured: hasToken && hasPhoneId,
+    services: {
+      whatsappCloudAPI: hasToken && hasPhoneId ? "READY" : "CONFIG_PENDING",
+      instagramGraphAPI: hasToken ? "READY" : "CONFIG_PENDING",
+      facebookGraphAPI: hasToken ? "READY" : "CONFIG_PENDING",
+      metaConversionsAPI: hasPixel ? "READY" : "OPTIONAL",
+      webhooks: hasVerifyToken ? "VERIFIED" : "TOKEN_PENDING",
+    },
+    webhookUrl: `${req.protocol}://${req.get("host")}/api/meta/webhook`,
+  });
+});
+
+// Meta Webhook Verification (Required by Meta Developer Dashboard)
+app.get("/api/meta/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  const expectedToken = process.env.META_VERIFY_TOKEN || "neuraforge_botcaza_secure_token";
+
+  if (mode === "subscribe" && token === expectedToken) {
+    console.log("[Meta Webhook] Webhook verificado exitosamente con Meta");
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).send("Verification token mismatch");
+  }
+});
+
+// Meta Webhook Listener (Handles incoming WhatsApp messages and Instagram DMs)
+app.post("/api/meta/webhook", (req, res) => {
+  const body = req.body;
+  console.log("[Meta Webhook Event]", JSON.stringify(body, null, 2));
+
+  // Acknowledge receipt to Meta immediately (must respond within 20s)
+  res.status(200).send("EVENT_RECEIVED");
+});
+
+// Send WhatsApp Message via WhatsApp Cloud API
+app.post("/api/meta/send-whatsapp", async (req, res) => {
+  const { to, message, templateName, alertData } = req.body;
+
+  if (!to) {
+    return res.status(400).json({ success: false, error: "El número destinatario 'to' es requerido (e.g. +521234567890)" });
+  }
+
+  const token = process.env.META_ACCESS_TOKEN;
+  const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
+
+  // Real WhatsApp Cloud API Call if credentials exist
+  if (token && phoneNumberId) {
+    try {
+      const payload: any = {
+        messaging_product: "whatsapp",
+        to: to.replace(/[^0-9]/g, ""),
+        type: "text",
+        text: {
+          preview_url: true,
+          body: message || `🤖 [NeuraforgeAI & Botcaza Alert] Nueva actividad on-chain en Aptos Mainnet.\nVisita: https://go.botcaza.ai`,
+        },
+      };
+
+      const metaRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await metaRes.json();
+      if (!metaRes.ok) {
+        return res.status(metaRes.status).json({ success: false, metaError: data });
+      }
+
+      return res.json({ success: true, mode: "LIVE_CLOUD_API", result: data });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  // Demonstration / Test Mode (No tokens yet)
+  res.json({
+    success: true,
+    mode: "SIMULATED_TEST_MODE",
+    notice: "Mensaje procesado correctamente. Para envíos reales a números de WhatsApp globales, configura META_ACCESS_TOKEN y META_PHONE_NUMBER_ID en las variables de entorno.",
+    payload: {
+      to,
+      message: message || "Alerta de Ballena Aptos en tiempo real",
+      source: "https://go.botcaza.ai",
+      timestamp: new Date().toISOString(),
+    },
+  });
+});
+
+// Meta Conversions API (CAPI) - Server-side tracking
+app.post("/api/meta/conversions", async (req, res) => {
+  const { eventName = "Purchase", eventData = {}, userEmail, clientIp } = req.body;
+  const pixelId = process.env.META_PIXEL_ID;
+  const token = process.env.META_ACCESS_TOKEN;
+
+  if (pixelId && token) {
+    try {
+      const capiPayload = {
+        data: [
+          {
+            event_name: eventName,
+            event_time: Math.floor(Date.now() / 1000),
+            action_source: "website",
+            event_source_url: "https://go.botcaza.ai",
+            user_data: {
+              client_user_agent: req.headers["user-agent"],
+              client_ip_address: clientIp || req.ip,
+            },
+            custom_data: eventData,
+          },
+        ],
+      };
+
+      const capiRes = await fetch(`https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(capiPayload),
+      });
+
+      const data = await capiRes.json();
+      return res.json({ success: true, mode: "LIVE_CAPI", data });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  res.json({
+    success: true,
+    mode: "SIMULATED_CAPI",
+    message: `Evento '${eventName}' registrado en el servidor. Al agregar META_PIXEL_ID, se transmitirá directamente a Meta Ads Manager saltándose los bloqueadores de anuncios.`,
+    event: { eventName, timestamp: Math.floor(Date.now() / 1000), publisher: "pub-9493850506792206" },
+  });
+});
+
+// ==========================================
+// 5. Vite Middleware & Server Initialization
 // ==========================================
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

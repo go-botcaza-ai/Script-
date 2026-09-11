@@ -119,3 +119,52 @@ export interface GoogleDataAgentResponse {
   suggestedNextQueries?: string[];
 }
 
+export interface ReferralProgram {
+  id: 'terabox' | 'bing' | 'dodo' | 'spotify' | 'botcaza-wallet' | string;
+  name: string;
+  category: 'cloud_video' | 'search_rewards' | 'fintech_web3' | 'streaming' | 'crypto';
+  categoryLabel: string;
+  payoutModel: string;
+  defaultReferralUrl: string;
+  userReferralCode: string;
+  userReferralUrl: string;
+  iconName: string;
+  description: string;
+  features: string[];
+  setupSteps: string[];
+  earningsRatePerUnit: number;
+  earningsUnitLabel: string;
+  stats: {
+    clicks: number;
+    signups: number;
+    shares: number;
+    estimatedEarningsUSD: number;
+  };
+}
+
+export interface TeraBoxVideoShareItem {
+  id: string;
+  title: string;
+  category: 'tv_series' | 'ai_tech' | 'web3_course' | 'trading_guide';
+  categoryLabel: string;
+  thumbnail: string;
+  duration: string;
+  viewsCount: number;
+  teraboxShareId: string;
+  previewUrl: string;
+  fullTeraboxUrl: string;
+  description: string;
+  estimatedEarningsPer1k: number;
+}
+
+export interface ReferralClickRecord {
+  id: string;
+  programId: string;
+  programName: string;
+  referralCode: string;
+  targetUrl: string;
+  platform: 'telegram' | 'whatsapp' | 'twitter' | 'web_direct' | 'other';
+  timestamp: string;
+  earningsGeneratedUSD: number;
+}
+

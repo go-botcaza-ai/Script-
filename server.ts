@@ -813,6 +813,62 @@ app.post("/api/meta/conversions", async (req, res) => {
 });
 
 // ==========================================
+// 4.5. Multi-Referral Network & Tracking Endpoints
+// ==========================================
+interface ServerReferralClick {
+  programId: string;
+  referralCode: string;
+  targetUrl: string;
+  platform: string;
+  timestamp: string;
+  ip: string;
+}
+
+const referralClicksInMemory: ServerReferralClick[] = [];
+
+app.post("/api/referrals/track", (req, res) => {
+  const { programId, referralCode, targetUrl, platform } = req.body || {};
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+
+  const clickRecord: ServerReferralClick = {
+    programId: programId || "unknown",
+    referralCode: referralCode || "DEFAULT",
+    targetUrl: targetUrl || "",
+    platform: platform || "web_direct",
+    timestamp: new Date().toISOString(),
+    ip,
+  };
+
+  referralClicksInMemory.unshift(clickRecord);
+  if (referralClicksInMemory.length > 500) {
+    referralClicksInMemory.pop();
+  }
+
+  logger.info("Referral link clicked", { programId, referralCode, platform });
+
+  res.json({
+    success: true,
+    message: "Click registrado exitosamente en el servidor",
+    totalServerClicks: referralClicksInMemory.length,
+    recordedClick: clickRecord,
+  });
+});
+
+app.get("/api/referrals/stats", (req, res) => {
+  const programCounts: Record<string, number> = {};
+  for (const c of referralClicksInMemory) {
+    programCounts[c.programId] = (programCounts[c.programId] || 0) + 1;
+  }
+
+  res.json({
+    success: true,
+    totalClicks: referralClicksInMemory.length,
+    byProgram: programCounts,
+    recentClicks: referralClicksInMemory.slice(0, 20),
+  });
+});
+
+// ==========================================
 // 5. Telegram Bot & Telegram Mini App (TMA) Endpoints
 // ==========================================
 

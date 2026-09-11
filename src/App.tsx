@@ -27,7 +27,8 @@ import {
   LifeBuoy,
   Globe,
   Wallet,
-  Send
+  Send,
+  Share2
 } from 'lucide-react';
 import { ContentItem, PurchaseRecord, AccessTokenState } from './types';
 import { INITIAL_CONTENT, PHP_SCRIPT_CONFIG } from './data';
@@ -48,6 +49,7 @@ import { NeuraforgeSupportDesk } from './components/NeuraforgeSupportDesk';
 import { GrowthMarketingTrafficGuide } from './components/GrowthMarketingTrafficGuide';
 import { BotcazaWalletGatewayHub } from './components/BotcazaWalletGatewayHub';
 import { TelegramMiniAppHub } from './components/TelegramMiniAppHub';
+import { MultiReferralHub } from './components/MultiReferralHub';
 import { isInsideTelegram } from './lib/telegramWebApp';
 
 export default function App() {
@@ -56,6 +58,7 @@ export default function App() {
     | 'data-agent'
     | 'wallet-gateway'
     | 'telegram-miniapp'
+    | 'multi-referrals'
     | 'monetization'
     | 'growth-marketing'
     | 'diagnostics'
@@ -288,6 +291,19 @@ export default function App() {
               </button>
 
               <button
+                id="nav-tab-multi-referrals"
+                onClick={() => setActiveTab('multi-referrals')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  activeTab === 'multi-referrals'
+                    ? 'bg-gradient-to-r from-blue-600 to-emerald-500 text-white shadow-md'
+                    : 'text-zinc-400 hover:text-white border border-blue-500/40'
+                }`}
+              >
+                <Share2 className="w-3.5 h-3.5 text-blue-400" />
+                Multi-Referidos &amp; TeraBox TV
+              </button>
+
+              <button
                 id="nav-tab-monetization"
                 onClick={() => setActiveTab('monetization')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
@@ -426,6 +442,14 @@ export default function App() {
             📱 Telegram App
           </button>
           <button
+            onClick={() => setActiveTab('multi-referrals')}
+            className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
+              activeTab === 'multi-referrals' ? 'bg-gradient-to-r from-blue-600 to-emerald-500 text-white' : 'text-zinc-400'
+            }`}
+          >
+            🎬 TeraBox TV &amp; Referidos
+          </button>
+          <button
             onClick={() => setActiveTab('monetization')}
             className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-mono font-bold ${
               activeTab === 'monetization' ? 'bg-[#00ff9d] text-black' : 'text-zinc-400'
@@ -529,6 +553,13 @@ export default function App() {
               }}
               onNavigateToWallet={() => setActiveTab('wallet-gateway')}
             />
+          </div>
+        )}
+
+        {/* TAB 1.9: MULTI-REFERRAL HUB & TERABOX TV */}
+        {activeTab === 'multi-referrals' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <MultiReferralHub />
           </div>
         )}
 

@@ -80,6 +80,8 @@ El repositorio incluye `render.yaml` pre-configurado para desplegar con cero fri
    - `NODE_ENV`: `production`
 6. Haz clic en **Create Web Service**.
 
+> 💡 **Nota sobre Rollup / recharts:** `react-is` está declarado como dependencia directa en `package.json` y optimizado en `vite.config.ts` (`optimizeDeps`), previniendo errores de resolución (`Rollup failed to resolve import "react-is"`) en entornos de CI/CD estrictos como Render y Yarn.
+
 ### Opción B: Despliegue de la API Python Opcional (FastAPI / Gunicorn)
 Si creaste un servicio con entorno **Python 3**:
 - **Build Command:** `pip install -r requirements.txt`

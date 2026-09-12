@@ -9,10 +9,11 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'react-is': path.resolve(__dirname, 'src/shims/react-is.ts'),
       },
     },
     optimizeDeps: {
-      include: ['recharts', 'react-is'],
+      include: ['recharts'],
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

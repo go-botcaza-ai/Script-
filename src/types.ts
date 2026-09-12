@@ -31,7 +31,7 @@ export interface PurchaseRecord {
   contentTitle: string;
   amount: number;
   currency: string;
-  paymentGateway: 'stripe' | 'paypal' | 'crypto' | 'card';
+  paymentGateway: 'stripe' | 'paypal' | 'crypto' | 'card' | 'botcaza_wallet';
   buyerEmail: string;
   buyerName: string;
   purchaseDate: string;

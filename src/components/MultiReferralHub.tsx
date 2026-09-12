@@ -27,12 +27,19 @@ import {
   Radio,
   Video,
   Smartphone,
-  Layers
+  Layers,
+  HelpCircle,
+  LogIn,
+  KeyRound,
+  Info,
+  X
 } from 'lucide-react';
 import { ReferralProgram, TeraBoxVideoShareItem, ReferralClickRecord } from '../types';
 import { INITIAL_REFERRAL_PROGRAMS, SAMPLE_TERABOX_VIDEOS } from '../data/referralProgramsData';
 
 export function MultiReferralHub() {
+  // Guide Modal State
+  const [showTeraBoxLoginGuide, setShowTeraBoxLoginGuide] = useState<boolean>(false);
   // Programs State (persisted in localStorage)
   const [programs, setPrograms] = useState<ReferralProgram[]>(() => {
     if (typeof window !== 'undefined') {
@@ -448,49 +455,91 @@ export function MultiReferralHub() {
       {activeSubTab === 'terabox-tv' && (
         <div className="space-y-8">
           {/* TERABOX CONFIGURATION BAR */}
-          <div className="p-6 rounded-2xl bg-zinc-900/90 border border-blue-500/30 shadow-xl backdrop-blur-md">
+          <div className="p-6 sm:p-7 rounded-2xl bg-zinc-900/90 border border-blue-500/40 shadow-2xl backdrop-blur-md space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-blue-400 text-xs font-mono font-semibold uppercase tracking-wider">
-                  <Tv className="w-4 h-4" />
-                  TeraBox Webmaster Center &bull; Atribución Oficial
+              <div className="space-y-2 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-mono font-semibold uppercase tracking-wider">
+                    <Tv className="w-3.5 h-3.5" />
+                    TeraBox Webmaster Center &bull; Atribución Oficial
+                  </span>
+                  {teraboxProgram.userReferralCode.includes('TERABOX_BOTCAZA_VIP') || teraboxProgram.userReferralCode.includes('TERABOX_CREATOR') ? (
+                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-mono">
+                      🟡 Código demo activo &bull; Configura el tuyo
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono">
+                      <Check className="w-3 h-3" />
+                      Código activo: {teraboxProgram.userReferralCode}
+                    </span>
+                  )}
                 </div>
-                <h2 className="text-xl font-bold text-white">Configura tu Código o Enlace de Referido TeraBox</h2>
-                <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl">
-                  Cada vez que un usuario abra o descargue un video de TeraBox TV mediante tus enlaces compartidos, el sistema inyectará tu código para registrar las reproducciones en tu cuenta de Webmaster.
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                  ¿Dónde me logueo o configuro mis credenciales de TeraBox?
+                </h2>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Por tu seguridad, el <strong>login oficial</strong> se realiza directamente en el portal oficial de <strong>TeraBox Webmaster</strong>. Luego pegas aquí tu código o link de referido para que la aplicación lo asocie automáticamente a todos tus videos, links de descarga y publicaciones.
                 </p>
               </div>
 
               {/* Form to update TeraBox code */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
                 <div className="relative">
                   <input
                     type="text"
                     defaultValue={teraboxProgram.userReferralCode}
                     id="input-terabox-ref-code"
-                    placeholder="Ej: TU_CODIGO_TERABOX"
-                    className="w-full sm:w-64 px-3.5 py-2.5 rounded-xl bg-black border border-zinc-700 text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                    placeholder="Pega tu código o enlace (ej: 1AbC23)"
+                    className="w-full sm:w-64 px-3.5 py-2.5 rounded-xl bg-black border border-zinc-700 text-white text-xs font-mono focus:border-blue-500 focus:outline-none placeholder:text-zinc-600"
                   />
                 </div>
                 <button
                   onClick={() => {
                     const input = document.getElementById('input-terabox-ref-code') as HTMLInputElement;
-                    if (input && input.value) {
-                      handleUpdateProgramCode('terabox', input.value.trim(), `https://terabox.app/s/${input.value.trim()}`);
+                    if (input && input.value.trim()) {
+                      const raw = input.value.trim();
+                      let extractedCode = raw;
+                      let generatedUrl = raw;
+                      if (raw.includes('/s/')) {
+                        extractedCode = raw.split('/s/')[1]?.split('?')[0] || raw;
+                        generatedUrl = raw.startsWith('http') ? raw : `https://${raw}`;
+                      } else {
+                        generatedUrl = `https://terabox.app/s/${extractedCode}`;
+                      }
+                      handleUpdateProgramCode('terabox', extractedCode, generatedUrl);
+                      showToast(`¡Código TeraBox guardado: ${extractedCode}!`);
                     }
                   }}
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono rounded-xl transition-all shadow-md active:scale-95"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono rounded-xl transition-all shadow-md active:scale-95 whitespace-nowrap flex items-center justify-center gap-1.5"
                 >
+                  <KeyRound className="w-3.5 h-3.5" />
                   Guardar Código
                 </button>
+              </div>
+            </div>
+
+            {/* QUICK ACTIONS & STEP-BY-STEP TOGGLE */}
+            <div className="pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowTeraBoxLoginGuide(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-blue-400 hover:text-blue-300 font-mono font-medium transition-all border border-blue-500/20"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  Ver Guía Rápida de 3 Pasos (¿Cómo loguearte y obtener tu código?)
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <a
                   href="https://www.terabox.com/webmaster"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium rounded-xl border border-zinc-700 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-mono font-bold border border-blue-500/30 transition-all"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Ir a TeraBox Webmaster
+                  <LogIn className="w-3.5 h-3.5" />
+                  Abrir TeraBox Webmaster Login Oficial
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
@@ -872,10 +921,25 @@ export function MultiReferralHub() {
 
           {/* INPUT FORM: VIDEO DETAILS */}
           <div className="p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-4 shadow-xl">
-            <h3 className="text-sm font-mono text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-              <Video className="w-4 h-4 text-pink-400" />
-              1. Datos del Video de TeraBox a Compartir:
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+              <h3 className="text-sm font-mono text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                <Video className="w-4 h-4 text-pink-400" />
+                1. Datos del Video de TeraBox a Compartir:
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono text-zinc-400">Atribución activa:</span>
+                <span className="px-2 py-0.5 rounded bg-blue-950/80 border border-blue-800/60 text-blue-400 text-xs font-mono font-bold">
+                  {teraboxProgram.userReferralCode}
+                </span>
+                <button
+                  onClick={() => setShowTeraBoxLoginGuide(true)}
+                  className="text-[11px] text-zinc-400 hover:text-white underline font-mono flex items-center gap-1"
+                >
+                  <HelpCircle className="w-3 h-3 text-blue-400" />
+                  ¿Cómo cambiarlo?
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1492,6 +1556,131 @@ export function MultiReferralHub() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: STEP-BY-STEP TERABOX LOGIN & CREDENTIALS GUIDE */}
+      {/* ========================================================================= */}
+      {showTeraBoxLoginGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-blue-500/40 rounded-2xl overflow-hidden shadow-2xl space-y-0 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-blue-950/70 via-zinc-900 to-black border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    Guía de Login &amp; Credenciales TeraBox
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-mono">
+                    Aprende dónde iniciar sesión y cómo vincular tus ganancias a esta app
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTeraBoxLoginGuide(false)}
+                className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 space-y-6 overflow-y-auto text-xs sm:text-sm text-zinc-300">
+              {/* Security Banner */}
+              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-emerald-400 text-xs font-mono">
+                    SEGURIDAD DE TUS CREDENCIALES
+                  </div>
+                  <p className="text-xs text-zinc-300 mt-0.5 leading-relaxed">
+                    <strong>Nunca ingreses tu contraseña de TeraBox en sitios externos.</strong> Por protocolo oficial, tu cuenta y tus retiros bancarios se gestionan 100% en TeraBox. En esta aplicación solo registras tu <strong>Código Público de Referido / Enlace Webmaster</strong> para atribuir tus comisiones.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 1 */}
+              <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-white font-mono text-xs">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+                    ¿DÓNDE ME LOGUEO EN TERABOX?
+                  </div>
+                  <span className="text-[11px] font-mono text-blue-400 font-semibold">Portal Oficial</span>
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Abre el portal de creadores oficial de TeraBox Webmaster en tu navegador o desde la aplicación móvil de TeraBox (sección <em>Perfil &gt; Webmaster</em>).
+                </p>
+                <div className="pt-2">
+                  <a
+                    href="https://www.terabox.com/webmaster"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold transition-all shadow-md"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    Abrir https://www.terabox.com/webmaster
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-white font-mono text-xs">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span>
+                    ¿CÓMO OBTENGO MI CÓDIGO O ENLACE?
+                  </div>
+                  <span className="text-[11px] font-mono text-amber-400 font-semibold">Webmaster Dashboard</span>
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Una vez dentro de tu cuenta en TeraBox:
+                </p>
+                <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1 pl-1">
+                  <li>Selecciona tu modalidad preferida: <strong>"Ganar por Reproducciones de Video"</strong> ($1.30–$3.00 USD / 1k vistas) o <strong>"Nuevos Usuarios"</strong> ($0.12 USD / registro).</li>
+                  <li>Ve a <strong>"Compartir archivos para ganar dinero"</strong> o <strong>"Mis Enlaces"</strong>.</li>
+                  <li>Copia tu enlace de referido (ej: <code>https://terabox.app/s/1xxxxxx</code>) o simplemente el código final (ej: <code>1xxxxxx</code>).</li>
+                </ul>
+              </div>
+
+              {/* Step 3 */}
+              <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-white font-mono text-xs">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">3</span>
+                    ¿DÓNDE LO CONFIGURES EN ESTA APLICACIÓN?
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-400 font-semibold">Guardado Local Seguro</span>
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  En la barra superior de <strong>TeraBox TV &amp; Videos Hub</strong>:
+                </p>
+                <ol className="list-decimal list-inside text-xs text-zinc-400 space-y-1 pl-1">
+                  <li>Pega tu código o enlace en el campo de texto.</li>
+                  <li>Haz clic en el botón <strong>"Guardar Código"</strong>.</li>
+                  <li>¡Listo! Tu código queda almacenado en tu navegador y se inyectará automáticamente en todas las publicaciones para Telegram, WhatsApp, TikTok y YouTube Shorts.</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-zinc-900 border-t border-zinc-800 flex items-center justify-between">
+              <span className="text-[11px] font-mono text-zinc-500">
+                Neuraforge AI &bull; Multi-Referral Hub v2.5
+              </span>
+              <button
+                onClick={() => setShowTeraBoxLoginGuide(false)}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold transition-all shadow-md"
+              >
+                ¡Entendido, volver!
+              </button>
             </div>
           </div>
         </div>

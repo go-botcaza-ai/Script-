@@ -17,7 +17,10 @@ import {
   HelpCircle,
   Terminal,
   Share2,
-  ArrowRight
+  ArrowRight,
+  Bot,
+  Coins,
+  TrendingUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -28,22 +31,25 @@ import {
   getTelegramUserData
 } from '../lib/telegramWebApp';
 import { getRealAptosWalletBalance } from '../lib/firestoreWalletGateway';
+import { BotcoinsTradeGameHub } from './BotcoinsTradeGameHub';
 
 interface TelegramMiniAppHubProps {
   onOpenCheckout?: (itemId: string) => void;
   onNavigateToWallet?: () => void;
+  onNavigateToAptosData?: () => void;
 }
 
 export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
   onOpenCheckout,
-  onNavigateToWallet
+  onNavigateToWallet,
+  onNavigateToAptosData
 }) => {
   const [isInTg, setIsInTg] = useState(false);
   const [tgUser, setTgUser] = useState<any>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [botUsername, setBotUsername] = useState('BotcazaAiBot');
+  const [botUsername, setBotUsername] = useState('Botcoins_Tradebot_Gamebot');
   const [mainButtonActive, setMainButtonActive] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<'wallet' | 'alerts' | 'stars' | 'botfather'>('wallet');
+  const [selectedAction, setSelectedAction] = useState<'botcoins' | 'wallet' | 'alerts' | 'stars' | 'botfather'>('botcoins');
 
   // Quick Wallet Check inside TMA
   const [testAddress, setTestAddress] = useState('0x1');
@@ -209,6 +215,7 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
       {/* Navigation Pills for Telegram Sections */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {[
+          { id: 'botcoins', label: '🤖 @Botcoins Tradebot & Gamebot', icon: Bot, isFeatured: true },
           { id: 'wallet', label: '💳 Wallet Express en Telegram', icon: Wallet },
           { id: 'alerts', label: '🐋 Alertas Aptos por Bot', icon: Bell },
           { id: 'stars', label: '⭐ Micropagos & Stars', icon: Star },
@@ -224,16 +231,32 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
               }}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
                 selectedAction === tab.id
-                  ? 'bg-[#0088cc] text-white shadow-[0_0_15px_rgba(0,136,204,0.4)]'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                  ? tab.id === 'botcoins'
+                    ? 'bg-gradient-to-r from-blue-600 via-[#0088cc] to-emerald-500 text-white shadow-[0_0_20px_rgba(0,136,204,0.5)]'
+                    : 'bg-[#0088cc] text-white shadow-[0_0_15px_rgba(0,136,204,0.4)]'
+                  : tab.id === 'botcoins'
+                    ? 'bg-blue-950/40 text-blue-300 hover:text-white border border-blue-500/50'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
+              {tab.id === 'botcoins' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+              )}
             </button>
           );
         })}
       </div>
+
+      {/* FEATURED: @Botcoins_Tradebot_Gamebot HUB */}
+      {selectedAction === 'botcoins' && (
+        <BotcoinsTradeGameHub
+          onOpenMiniApp={toggleTelegramMainButton}
+          onNavigateToWallet={onNavigateToWallet}
+          onNavigateToAptosData={onNavigateToAptosData}
+        />
+      )}
 
       {/* SECTION 1: WALLET EXPRESS EN TELEGRAM */}
       {selectedAction === 'wallet' && (

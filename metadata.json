@@ -1,6 +1,6 @@
 {
   "name": "Pay Per View Content Platform",
-  "description": "Plataforma NeuraforgeAI con Agente de Inteligencia de Datos Aptos, scripts de monetización por clic (Noticias y Clima) con Google Analytics y AdSense.",
+  "description": "Plataforma Neuraforge AI con Suite de Monetización Google Ads & AdSense en la Era de la OA, telemetría de clics reales, integración con TeraBox TV, Bing Rewards y DODO DEX.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -119,10 +119,32 @@ export interface GoogleDataAgentResponse {
   suggestedNextQueries?: string[];
 }
 
-export interface ReferralProgram {
-  id: 'terabox' | 'bing' | 'dodo' | 'spotify' | 'botcaza-wallet' | string;
+export interface GoogleAffiliateProfile {
+  id: string;
+  email: string;
   name: string;
-  category: 'cloud_video' | 'search_rewards' | 'fintech_web3' | 'streaming' | 'crypto';
+  avatar?: string;
+  publisherId: string; // e.g. pub-9493850506792206
+  affiliateCode: string; // e.g. GOOG-OA-PUB-XXXXXX
+  registeredAt: string;
+  status: 'ACTIVE_CERTIFIED' | 'PENDING_ONBOARD';
+  suiteServices: {
+    googleAdSense: boolean;
+    googleCloudAds: boolean;
+    adsDataHub: boolean;
+    topicsApiPrivacySandbox: boolean;
+    aiSmartBidding: boolean;
+  };
+  totalRealClicks: number;
+  totalRealEarningsUSD: number;
+  activeCampaignTag: string;
+  trackingUrl: string;
+}
+
+export interface ReferralProgram {
+  id: 'terabox' | 'google-ads' | 'bing' | 'dodo' | 'spotify' | 'botcaza-wallet' | string;
+  name: string;
+  category: 'google_suite' | 'cloud_video' | 'search_rewards' | 'fintech_web3' | 'streaming' | 'crypto';
   categoryLabel: string;
   payoutModel: string;
   defaultReferralUrl: string;
@@ -166,5 +188,37 @@ export interface ReferralClickRecord {
   platform: 'telegram' | 'whatsapp' | 'twitter' | 'web_direct' | 'other';
   timestamp: string;
   earningsGeneratedUSD: number;
+}
+
+export interface BotcoinsTradebotData {
+  botUsername: string; // "Botcoins_Tradebot_Gamebot"
+  botName: string; // "Botcoins Tradebot & Gamebot"
+  telegramUrl: string; // "https://t.me/Botcoins_Tradebot_Gamebot"
+  miniAppUrl: string; // "https://t.me/Botcoins_Tradebot_Gamebot/app"
+  status: 'ONLINE' | 'STANDBY';
+  botcoinsBalance: number;
+  miningRatePerTap: number;
+  dailyStreak: number;
+  energy: number;
+  maxEnergy: number;
+  activeSignals: TradebotSignal[];
+  gameHighScores: {
+    tapSprint: number;
+    aptosRunner: number;
+  };
+}
+
+export interface TradebotSignal {
+  id: string;
+  pair: string; // e.g. "APT/USDT", "BOTCOIN/APT", "BTC/USDT"
+  action: 'BUY' | 'SELL' | 'HOLD';
+  entryPrice: number;
+  targetPrice1: number;
+  targetPrice2: number;
+  stopLoss: number;
+  confidence: number; // percentage, e.g. 89%
+  timestamp: string;
+  dex: string; // e.g. "Liquidswap", "PancakeSwap Aptos", "DODO DEX"
+  aiReasoning: string;
 }
 

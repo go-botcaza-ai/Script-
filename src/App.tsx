@@ -287,7 +287,10 @@ export default function App() {
                 }`}
               >
                 <Send className="w-3.5 h-3.5 text-[#29b6f6]" />
-                Telegram Mini App
+                <span>Telegram &amp; @Botcoins</span>
+                <span className="hidden xl:inline text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  Bot
+                </span>
               </button>
 
               <button
@@ -552,6 +555,7 @@ export default function App() {
                 if (item) setActiveItemForCheckout(item);
               }}
               onNavigateToWallet={() => setActiveTab('wallet-gateway')}
+              onNavigateToAptosData={() => setActiveTab('data-agent')}
             />
           </div>
         )}

@@ -2,6 +2,37 @@ import { ReferralProgram, TeraBoxVideoShareItem } from '../types';
 
 export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
   {
+    id: 'google-ads',
+    name: 'Google Suite Monetización & Google Cloud Ads (Era OA)',
+    category: 'google_suite',
+    categoryLabel: 'Google Suite & Cloud Ads',
+    payoutModel: '$0.45 – $4.80 USD por clic verificado (CPC) + CPM dinámico de Google AdSense y Cloud Ads',
+    defaultReferralUrl: 'https://www.google.com/adsense/start/',
+    userReferralCode: 'pub-9493850506792206',
+    userReferralUrl: 'https://go.botcaza.ai/?utm_source=google_ads_partner&utm_medium=affiliate_oa&pub=pub-9493850506792206',
+    iconName: 'Globe',
+    description: 'Ecosistema publicitario pionero de Google en la era de la OA (Open Advertising). Monetiza con Inteligencia Artificial, Privacy Sandbox, Topics API y Google Cloud Ads Data Hub sin cookies invasivas.',
+    features: [
+      'Alta tasa de monetización: CPC premium en nichos de Inteligencia Artificial, Finanzas y Web3.',
+      '1-Click Onboarding con cuenta Google para registrarte como Afiliado y Editor Certificado.',
+      'Tecnología de avanzada Privacy Sandbox y Topics API de Google, cumpliendo normativas globales de privacidad.',
+      'Pagos automáticos mensuales directamente a tu cuenta bancaria vía Google AdSense.'
+    ],
+    setupSteps: [
+      'Haz clic en "Afiliarme con Google" para vincular o crear tu cuenta instantáneamente.',
+      'Obtén tu ID oficial de Publisher (pub-9493850506792206) y tu token de Afiliado Google OA.',
+      'Distribuye tus enlaces o widgets monetizados y recibe pagos directos de Google.'
+    ],
+    earningsRatePerUnit: 0.85,
+    earningsUnitLabel: 'USD promedio por clic verificado',
+    stats: {
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
+    }
+  },
+  {
     id: 'terabox',
     name: 'TeraBox TV & Video Cloud',
     category: 'cloud_video',
@@ -26,10 +57,10 @@ export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
     earningsRatePerUnit: 0.002, // $2 por cada 1k views = $0.002 por click/view
     earningsUnitLabel: 'USD por vista/clic',
     stats: {
-      clicks: 1420,
-      signups: 84,
-      shares: 156,
-      estimatedEarningsUSD: 18.24
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
     }
   },
   {
@@ -57,10 +88,10 @@ export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
     earningsRatePerUnit: 0.005, // Equivalente estimado en USD por punto
     earningsUnitLabel: 'USD equiv. por búsqueda',
     stats: {
-      clicks: 860,
-      signups: 39,
-      shares: 92,
-      estimatedEarningsUSD: 12.80
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
     }
   },
   {
@@ -88,10 +119,10 @@ export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
     earningsRatePerUnit: 0.05,
     earningsUnitLabel: 'USD promedio por swap',
     stats: {
-      clicks: 530,
-      signups: 22,
-      shares: 64,
-      estimatedEarningsUSD: 24.50
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
     }
   },
   {
@@ -119,10 +150,10 @@ export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
     earningsRatePerUnit: 0.015,
     earningsUnitLabel: 'USD por reproducción monetizada',
     stats: {
-      clicks: 940,
-      signups: 45,
-      shares: 110,
-      estimatedEarningsUSD: 16.40
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
     }
   },
   {
@@ -150,10 +181,10 @@ export const INITIAL_REFERRAL_PROGRAMS: ReferralProgram[] = [
     earningsRatePerUnit: 0.25,
     earningsUnitLabel: 'USD equiv. en APT por desbloqueo',
     stats: {
-      clicks: 1680,
-      signups: 112,
-      shares: 240,
-      estimatedEarningsUSD: 42.00
+      clicks: 0,
+      signups: 0,
+      shares: 0,
+      estimatedEarningsUSD: 0
     }
   }
 ];

@@ -21,6 +21,8 @@ export interface EnvValidationResult {
   details: {
     aptosNodeUrl: string;
     appUrl: string;
+    miniAppUrl: string;
+    telegramWebhookUrl: string;
     adsensePublisherId: string;
     ga4MeasurementId: string;
   };
@@ -47,6 +49,8 @@ export function validateEnvironment(env: Record<string, string | undefined> = pr
   // 2. Core Defaults
   const aptosNodeUrl = env.APTOS_NODE_URL?.trim() || 'https://fullnode.mainnet.aptoslabs.com/v1';
   const appUrl = env.APP_URL?.trim() || 'https://go.botcaza.ai';
+  const miniAppUrl = env.MINI_APP_URL?.trim() || 'https://script-ads.onrender.com/';
+  const telegramWebhookUrl = env.TELEGRAM_WEBHOOK_URL?.trim() || 'https://script-ads.onrender.com/api/telegram/webhook';
   const adsensePublisherId = env.ADSENSE_PUBLISHER_ID?.trim() || 'pub-9493850506792206';
   const ga4MeasurementId = env.GA4_MEASUREMENT_ID?.trim() || 'G-24Q6GBQN75';
 
@@ -89,6 +93,8 @@ export function validateEnvironment(env: Record<string, string | undefined> = pr
     details: {
       aptosNodeUrl,
       appUrl,
+      miniAppUrl,
+      telegramWebhookUrl,
       adsensePublisherId,
       ga4MeasurementId,
     },

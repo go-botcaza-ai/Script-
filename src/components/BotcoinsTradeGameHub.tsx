@@ -18,7 +18,8 @@ import {
   Play,
   Share2,
   Terminal,
-  Bot
+  Bot,
+  Globe
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { triggerTelegramHaptic } from '../lib/telegramWebApp';
@@ -297,6 +298,10 @@ export const BotcoinsTradeGameHub: React.FC<BotcoinsTradeGameHubProps> = ({
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold">
                   3-EN-1: TRADE &bull; GAME &bull; BOTCOINS
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-purple-400" />
+                  RENDER: script-ads.onrender.com
                 </span>
               </div>
               <p className="text-xs text-zinc-300">
@@ -743,12 +748,12 @@ export const BotcoinsTradeGameHub: React.FC<BotcoinsTradeGameHubProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-2">
               <div className="flex items-center justify-between text-cyan-400 font-bold">
-                <span>1. Habilitar Botón de Menú Web App:</span>
+                <span>1. Habilitar Botón de Menú:</span>
                 <button
-                  onClick={() => handleCopy('/setmenubutton', 'cmd-menu')}
+                  onClick={() => handleCopy('https://script-ads.onrender.com/?tab=telegram-miniapp', 'cmd-menu')}
                   className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
                 >
                   {copiedKey === 'cmd-menu' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -757,14 +762,14 @@ export const BotcoinsTradeGameHub: React.FC<BotcoinsTradeGameHubProps> = ({
               <p className="text-zinc-400 text-[11px]">
                 Envía a @BotFather: <code className="text-white">/setmenubutton</code>, selecciona <code className="text-blue-400">@{botUsername}</code> y pega:
               </p>
-              <div className="p-2 rounded bg-zinc-950 text-emerald-300 text-[11px] truncate">
-                https://go.botcaza.ai?tab=telegram-miniapp
+              <div className="p-2 rounded bg-zinc-950 text-emerald-300 text-[11px] truncate select-all">
+                https://script-ads.onrender.com/?tab=telegram-miniapp
               </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-2">
               <div className="flex items-center justify-between text-cyan-400 font-bold">
-                <span>2. Configurar Comandos del Bot:</span>
+                <span>2. Configurar Comandos:</span>
                 <button
                   onClick={() => handleCopy("trade - Señales de trading y DEX\ngame - Juegos y minería de Botcoins\nbotcoins - Tu saldo y recompensas\nwallet - Billetera Aptos Express\nhelp - Ayuda del bot", 'cmd-list')}
                   className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
@@ -775,6 +780,24 @@ export const BotcoinsTradeGameHub: React.FC<BotcoinsTradeGameHubProps> = ({
               <p className="text-zinc-400 text-[11px]">
                 Envía a @BotFather: <code className="text-white">/setcommands</code> y pega la lista de comandos para autocompletar en el chat.
               </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-2">
+              <div className="flex items-center justify-between text-purple-400 font-bold">
+                <span>3. Webhook en Render:</span>
+                <button
+                  onClick={() => handleCopy('https://script-ads.onrender.com/api/telegram/webhook', 'cmd-webhook-hub')}
+                  className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                >
+                  {copiedKey === 'cmd-webhook-hub' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+              <p className="text-zinc-400 text-[11px]">
+                URL oficial configurada para recibir eventos del bot en Render.com:
+              </p>
+              <div className="p-2 rounded bg-zinc-950 text-purple-300 text-[11px] truncate select-all">
+                https://script-ads.onrender.com/api/telegram/webhook
+              </div>
             </div>
           </div>
         </div>

@@ -1074,6 +1074,10 @@ const DEFAULT_BOTCOINS_SIGNALS: any[] = [
   }
 ];
 
+// Base URLs for Telegram Mini App & Webhook (Render.com production / staging)
+const DEFAULT_MINI_APP_URL = (process.env.MINI_APP_URL || "https://script-ads.onrender.com/").replace(/\/+$/, "");
+const DEFAULT_WEBHOOK_URL = process.env.TELEGRAM_WEBHOOK_URL || `${DEFAULT_MINI_APP_URL}/api/telegram/webhook`;
+
 // Check Telegram Bot status with @Botcoins_Tradebot_Gamebot as primary bot
 app.get("/api/telegram/status", (req, res) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -1085,8 +1089,9 @@ app.get("/api/telegram/status", (req, res) => {
     botDisplayName: "@Botcoins_Tradebot_Gamebot (Trade & Game)",
     telegramDirectUrl: "https://t.me/Botcoins_Tradebot_Gamebot",
     miniAppDirectUrl: "https://t.me/Botcoins_Tradebot_Gamebot/app",
-    miniAppUrl: "https://go.botcaza.ai",
-    webhookUrl: "https://go.botcaza.ai/api/telegram/webhook",
+    miniAppUrl: DEFAULT_MINI_APP_URL,
+    webhookUrl: DEFAULT_WEBHOOK_URL,
+    renderUrl: "https://script-ads.onrender.com/",
     commands: [
       "/start",
       "/trade",
@@ -1106,8 +1111,105 @@ app.get("/api/telegram/status", (req, res) => {
       hapticFeedback: true,
       starsSupport: true,
       botcazaWalletGateway: true,
+      renderDeployment: true,
     }
   });
+});
+
+// Configure Telegram Webhook at Telegram Bot API
+app.post("/api/telegram/set-webhook", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const targetWebhookUrl = (req.body?.url || DEFAULT_WEBHOOK_URL).trim();
+
+  if (!token) {
+    return res.json({
+      success: false,
+      configured: false,
+      webhookUrl: targetWebhookUrl,
+      message: "TELEGRAM_BOT_TOKEN no configurado en variables de entorno del servidor. Agrega tu token en Render.com o panel de control.",
+      manualUrl: `https://api.telegram.org/bot<TU_TOKEN>/setWebhook?url=${encodeURIComponent(targetWebhookUrl)}`
+    });
+  }
+
+  try {
+    const tgRes = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: targetWebhookUrl,
+        allowed_updates: ["message", "edited_message", "callback_query"]
+      })
+    });
+    const data = await tgRes.json();
+    return res.json({
+      success: data.ok,
+      configured: true,
+      webhookUrl: targetWebhookUrl,
+      telegramResponse: data,
+      message: data.ok
+        ? `¡Webhook configurado exitosamente en Telegram apuntando a ${targetWebhookUrl}!`
+        : `Telegram API retornó error: ${data.description || "Desconocido"}`
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      webhookUrl: targetWebhookUrl
+    });
+  }
+});
+
+// Retrieve Live Webhook status from Telegram Bot API
+app.get("/api/telegram/webhook-info", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const targetWebhookUrl = DEFAULT_WEBHOOK_URL;
+
+  if (!token) {
+    return res.json({
+      success: true,
+      configured: false,
+      targetWebhookUrl,
+      miniAppUrl: DEFAULT_MINI_APP_URL,
+      status: "NO_TOKEN",
+      message: "TELEGRAM_BOT_TOKEN pendiente. Tu bot de Telegram está listo en @Botcoins_Tradebot_Gamebot.",
+      manualSetUrl: `https://api.telegram.org/bot<TU_TOKEN>/setWebhook?url=${encodeURIComponent(targetWebhookUrl)}`
+    });
+  }
+
+  try {
+    const tgRes = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`);
+    const data = await tgRes.json();
+    return res.json({
+      success: data.ok,
+      configured: true,
+      targetWebhookUrl,
+      miniAppUrl: DEFAULT_MINI_APP_URL,
+      telegramWebhookInfo: data.result,
+      isPointedToRender: data.result?.url?.includes("script-ads.onrender.com")
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      targetWebhookUrl,
+      miniAppUrl: DEFAULT_MINI_APP_URL
+    });
+  }
+});
+
+// Delete Webhook if user wants to reset
+app.post("/api/telegram/delete-webhook", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    return res.json({ success: false, message: "TELEGRAM_BOT_TOKEN no configurado." });
+  }
+  try {
+    const tgRes = await fetch(`https://api.telegram.org/bot${token}/deleteWebhook`);
+    const data = await tgRes.json();
+    return res.json({ success: data.ok, telegramResponse: data });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Botcoins Data & Trading Signals Endpoint
@@ -1175,8 +1277,8 @@ app.post("/api/telegram/webhook", async (req, res) => {
 
     inlineButtons = [
       [
-        { text: "📊 Abrir Tradebot Mini App", web_app: { url: "https://go.botcaza.ai?tab=telegram-miniapp" } },
-        { text: "⚡ Swap en DEX", web_app: { url: "https://go.botcaza.ai?tab=wallet-gateway" } }
+        { text: "📊 Abrir Tradebot Mini App", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=telegram-miniapp` } },
+        { text: "⚡ Swap en DEX", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=wallet-gateway` } }
       ]
     ];
   } else if (lowerText.startsWith("/game") || lowerText.startsWith("/play")) {
@@ -1188,8 +1290,8 @@ app.post("/api/telegram/webhook", async (req, res) => {
 
     inlineButtons = [
       [
-        { text: "🎮 Jugar Gamebot Ahora", web_app: { url: "https://go.botcaza.ai?tab=telegram-miniapp" } },
-        { text: "⭐ Canjear Botcoins", web_app: { url: "https://go.botcaza.ai?tab=wallet-gateway" } }
+        { text: "🎮 Jugar Gamebot Ahora", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=telegram-miniapp` } },
+        { text: "⭐ Canjear Botcoins", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=wallet-gateway` } }
       ]
     ];
   } else if (lowerText.startsWith("/botcoins")) {
@@ -1201,8 +1303,8 @@ app.post("/api/telegram/webhook", async (req, res) => {
 
     inlineButtons = [
       [
-        { text: "🪙 Minar Botcoins", web_app: { url: "https://go.botcaza.ai?tab=telegram-miniapp" } },
-        { text: "💳 Ver Billetera", web_app: { url: "https://go.botcaza.ai?tab=wallet-gateway" } }
+        { text: "🪙 Minar Botcoins", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=telegram-miniapp` } },
+        { text: "💳 Ver Billetera", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=wallet-gateway` } }
       ]
     ];
   } else {
@@ -1216,15 +1318,15 @@ app.post("/api/telegram/webhook", async (req, res) => {
 
     inlineButtons = [
       [
-        { text: "🚀 Abrir Mini App Completa", web_app: { url: "https://go.botcaza.ai" } }
+        { text: "🚀 Abrir Mini App Completa", web_app: { url: `${DEFAULT_MINI_APP_URL}/` } }
       ],
       [
-        { text: "📈 Tradebot", web_app: { url: "https://go.botcaza.ai?tab=telegram-miniapp" } },
-        { text: "🎮 Gamebot & Botcoins", web_app: { url: "https://go.botcaza.ai?tab=telegram-miniapp" } }
+        { text: "📈 Tradebot", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=telegram-miniapp` } },
+        { text: "🎮 Gamebot & Botcoins", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=telegram-miniapp` } }
       ],
       [
-        { text: "💳 Mi Wallet", web_app: { url: "https://go.botcaza.ai?tab=wallet-gateway" } },
-        { text: "🐋 Alertas Aptos", web_app: { url: "https://go.botcaza.ai?tab=data-agent" } }
+        { text: "💳 Mi Wallet", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=wallet-gateway` } },
+        { text: "🐋 Alertas Aptos", web_app: { url: `${DEFAULT_MINI_APP_URL}/?tab=data-agent` } }
       ]
     ];
   }
@@ -1258,7 +1360,8 @@ app.post("/api/telegram/webhook", async (req, res) => {
     chatId: chatId || "test_chat",
     textReceived: rawText,
     responsePreview: responseMessage,
-    miniAppUrl: "https://go.botcaza.ai",
+    miniAppUrl: DEFAULT_MINI_APP_URL,
+    webhookUrl: DEFAULT_WEBHOOK_URL,
   });
 });
 
@@ -1278,7 +1381,7 @@ app.post("/api/telegram/send-alert", async (req, res) => {
           parse_mode: "HTML",
           reply_markup: {
             inline_keyboard: [
-              [{ text: "⚡ Ver en Mini App", web_app: { url: "https://go.botcaza.ai" } }],
+              [{ text: "⚡ Ver en Mini App", web_app: { url: `${DEFAULT_MINI_APP_URL}/` } }],
             ],
           },
         }),

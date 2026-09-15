@@ -20,7 +20,12 @@ import {
   ArrowRight,
   Bot,
   Coins,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  Radio,
+  Server,
+  AlertTriangle,
+  Play
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -49,7 +54,15 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState('Botcoins_Tradebot_Gamebot');
   const [mainButtonActive, setMainButtonActive] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<'botcoins' | 'wallet' | 'alerts' | 'stars' | 'botfather'>('botcoins');
+  const [selectedAction, setSelectedAction] = useState<'botcoins' | 'webhook' | 'wallet' | 'alerts' | 'stars' | 'botfather'>('botcoins');
+
+  // Render & Webhook Configuration state
+  const [renderMiniAppUrl, setRenderMiniAppUrl] = useState('https://script-ads.onrender.com/');
+  const [renderWebhookUrl, setRenderWebhookUrl] = useState('https://script-ads.onrender.com/api/telegram/webhook');
+  const [webhookInfo, setWebhookInfo] = useState<any>(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [settingWebhook, setSettingWebhook] = useState(false);
+  const [webhookActionMsg, setWebhookActionMsg] = useState<string | null>(null);
 
   // Quick Wallet Check inside TMA
   const [testAddress, setTestAddress] = useState('0x1');
@@ -81,8 +94,9 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
       });
     }
 
-    // Auto-fetch 0x1 balance
+    // Auto-fetch 0x1 balance & webhook info
     handleQuickBalanceCheck('0x1');
+    fetchWebhookInfo();
 
     return () => {
       // Clean up MainButton if needed
@@ -91,6 +105,49 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
       }
     };
   }, []);
+
+  const fetchWebhookInfo = async () => {
+    setWebhookLoading(true);
+    try {
+      const res = await fetch('/api/telegram/webhook-info');
+      const data = await res.json();
+      setWebhookInfo(data);
+      if (data.miniAppUrl) setRenderMiniAppUrl(data.miniAppUrl);
+      if (data.targetWebhookUrl) setRenderWebhookUrl(data.targetWebhookUrl);
+    } catch (e) {
+      // Silent in dev preview
+    } finally {
+      setWebhookLoading(false);
+    }
+  };
+
+  const handleRegisterWebhook = async () => {
+    setSettingWebhook(true);
+    setWebhookActionMsg(null);
+    triggerTelegramHaptic('heavy');
+    try {
+      const res = await fetch('/api/telegram/set-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: renderWebhookUrl })
+      });
+      const data = await res.json();
+      setSettingWebhook(false);
+      if (data.success) {
+        triggerTelegramHaptic('success');
+        confetti({ particleCount: 50, spread: 70 });
+        setWebhookActionMsg(data.message || `¡Webhook vinculado exitosamente en Telegram hacia ${renderWebhookUrl}!`);
+      } else {
+        triggerTelegramHaptic('warning');
+        setWebhookActionMsg(data.message || 'Webhook verificado.');
+      }
+      fetchWebhookInfo();
+    } catch (err: any) {
+      setSettingWebhook(false);
+      triggerTelegramHaptic('error');
+      setWebhookActionMsg(`Error al configurar webhook: ${err.message}`);
+    }
+  };
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -141,7 +198,7 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: {
-            text: '/alert',
+            text: '/trade',
             chat: { id: alertTargetChat.trim() || 'demo_chat_id' }
           }
         })
@@ -149,7 +206,7 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
       const data = await res.json();
       setAlertSending(false);
       triggerTelegramHaptic('success');
-      setAlertResult('¡Mensaje enviado al Webhook de Telegram! El bot procesará la alerta de ballenas Aptos.');
+      setAlertResult(`¡Webhook procesado! Bot respondido con botones apuntando a ${data.miniAppUrl || renderMiniAppUrl}`);
     } catch (err: any) {
       setAlertSending(false);
       triggerTelegramHaptic('error');
@@ -157,7 +214,7 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
     }
   };
 
-  const miniAppShareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://go.botcaza.ai')}&text=${encodeURIComponent('🚀 Abre la Mini App de Botcaza en Telegram: Wallet Aptos, Alertas On-Chain y Monetización.')}`;
+  const miniAppShareUrl = `https://t.me/share/url?url=${encodeURIComponent(renderMiniAppUrl)}&text=${encodeURIComponent('🚀 Abre la Mini App de @Botcoins_Tradebot_Gamebot en Telegram: Tradebot, Minería de Botcoins y Wallet Aptos.')}`;
   const directMiniAppUrl = `https://t.me/${botUsername}/app`;
 
   return (
@@ -216,11 +273,12 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {[
           { id: 'botcoins', label: '🤖 @Botcoins Tradebot & Gamebot', icon: Bot, isFeatured: true },
+          { id: 'webhook', label: '⚡ Webhook & Render.com', icon: Globe, isHighlight: true },
           { id: 'wallet', label: '💳 Wallet Express en Telegram', icon: Wallet },
           { id: 'alerts', label: '🐋 Alertas Aptos por Bot', icon: Bell },
           { id: 'stars', label: '⭐ Micropagos & Stars', icon: Star },
           { id: 'botfather', label: '🛠️ Guía BotFather (Configurar en 1 min)', icon: Terminal }
-        ].map((tab) => {
+        ].map((tab: any) => {
           const Icon = tab.icon;
           return (
             <button
@@ -233,9 +291,13 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
                 selectedAction === tab.id
                   ? tab.id === 'botcoins'
                     ? 'bg-gradient-to-r from-blue-600 via-[#0088cc] to-emerald-500 text-white shadow-[0_0_20px_rgba(0,136,204,0.5)]'
+                    : tab.id === 'webhook'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_18px_rgba(147,51,234,0.4)]'
                     : 'bg-[#0088cc] text-white shadow-[0_0_15px_rgba(0,136,204,0.4)]'
                   : tab.id === 'botcoins'
                     ? 'bg-blue-950/40 text-blue-300 hover:text-white border border-blue-500/50'
+                    : tab.id === 'webhook'
+                    ? 'bg-purple-950/30 text-purple-300 hover:text-white border border-purple-800/40'
                     : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
               }`}
             >
@@ -243,6 +305,9 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
               <span>{tab.label}</span>
               {tab.id === 'botcoins' && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+              )}
+              {tab.id === 'webhook' && (
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse ml-1" />
               )}
             </button>
           );
@@ -256,6 +321,205 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
           onNavigateToWallet={onNavigateToWallet}
           onNavigateToAptosData={onNavigateToAptosData}
         />
+      )}
+
+      {/* SECTION: WEBHOOK & RENDER.COM CONFIGURATION */}
+      {selectedAction === 'webhook' && (
+        <div className="space-y-6">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-black border border-purple-500/30 space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Server className="w-3.5 h-3.5" />
+                    Render.com &bull; Mini App &amp; Webhook Hub
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-cyan-400" />
+                  Dirección Oficial en Render.com para Pruebas y Monetización
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-2xl">
+                  Configuración directa de la Mini App y el Webhook de Telegram para el bot <span className="text-cyan-300 font-mono font-bold">@{botUsername}</span> en tu servidor de Render.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchWebhookInfo}
+                  disabled={webhookLoading}
+                  className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-mono text-zinc-300 flex items-center gap-1.5 transition-all cursor-pointer border border-zinc-700"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${webhookLoading ? 'animate-spin' : ''}`} />
+                  <span>Actualizar Estado</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Notification alert banner if any */}
+            {webhookActionMsg && (
+              <div className="p-3.5 rounded-xl bg-purple-950/50 border border-purple-500/50 text-xs font-mono text-purple-200 flex items-center justify-between">
+                <span>{webhookActionMsg}</span>
+                <button onClick={() => setWebhookActionMsg(null)} className="text-zinc-400 hover:text-white text-xs underline ml-2">Cerrar</button>
+              </div>
+            )}
+
+            {/* Grid of URLs & Endpoints */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* URL 1: Mini App Render URL */}
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-zinc-300 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                    Dirección de la Mini App (Render.com):
+                  </span>
+                  <button
+                    onClick={() => handleCopy(renderMiniAppUrl, 'miniapp-render')}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[11px] font-mono text-zinc-300 transition-all cursor-pointer"
+                  >
+                    {copiedKey === 'miniapp-render' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedKey === 'miniapp-render' ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-950 text-emerald-400 font-mono text-xs border border-emerald-950 select-all break-all">
+                  {renderMiniAppUrl}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+                  <span>Destino en BotFather:</span>
+                  <a
+                    href={renderMiniAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Probar en Navegador</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+
+              {/* URL 2: Telegram Webhook URL */}
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-zinc-300 flex items-center gap-1.5">
+                    <Radio className="w-4 h-4 text-purple-400" />
+                    URL del Webhook de Telegram:
+                  </span>
+                  <button
+                    onClick={() => handleCopy(renderWebhookUrl, 'webhook-render')}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[11px] font-mono text-zinc-300 transition-all cursor-pointer"
+                  >
+                    {copiedKey === 'webhook-render' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedKey === 'webhook-render' ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-950 text-purple-300 font-mono text-xs border border-purple-950 select-all break-all">
+                  {renderWebhookUrl}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+                  <span>Método soportado:</span>
+                  <span className="text-white font-bold">POST (JSON Update)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Webhook Status Info from Telegram API */}
+            <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-zinc-300 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  Diagnóstico en Tiempo Real con Telegram API:
+                </span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                  webhookInfo?.configured
+                    ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
+                    : 'bg-amber-950 text-amber-400 border-amber-800'
+                }`}>
+                  {webhookInfo?.configured ? 'TOKEN CONFIGURADO' : 'TOKEN PENDIENTE O SIMULADO'}
+                </span>
+              </div>
+
+              {webhookInfo?.telegramWebhookInfo ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                    <span className="text-zinc-500 block text-[10px]">URL Registrada en Telegram:</span>
+                    <span className="text-white truncate block font-bold">{webhookInfo.telegramWebhookInfo.url || 'Ninguna (Polling)'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                    <span className="text-zinc-500 block text-[10px]">Actualizaciones Pendientes:</span>
+                    <span className="text-cyan-400 block font-bold">{webhookInfo.telegramWebhookInfo.pending_update_count ?? 0}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                    <span className="text-zinc-500 block text-[10px]">Apunta a Render:</span>
+                    <span className={`block font-bold ${webhookInfo.isPointedToRender ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                      {webhookInfo.isPointedToRender ? 'SÍ (script-ads.onrender.com)' : 'Pendiente registro'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                  {webhookInfo?.message || 'Conexión lista con el backend. Pulsa "Registrar Webhook Oficial" para enviar la instrucción a Telegram.'}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={handleRegisterWebhook}
+                  disabled={settingWebhook}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-[#0088cc] hover:from-blue-500 hover:to-cyan-400 text-white font-mono text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20"
+                >
+                  <Zap className={`w-4 h-4 ${settingWebhook ? 'animate-spin' : ''}`} />
+                  <span>{settingWebhook ? 'Registrando en Telegram...' : '⚡ Registrar Webhook en Telegram API'}</span>
+                </button>
+
+                <button
+                  onClick={handleSendTelegramAlert}
+                  disabled={alertSending}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border border-zinc-700"
+                >
+                  <Play className={`w-4 h-4 text-emerald-400 ${alertSending ? 'animate-spin' : ''}`} />
+                  <span>{alertSending ? 'Enviando...' : '🧪 Probar Respuesta Webhook (/trade)'}</span>
+                </button>
+
+                <a
+                  href={`https://t.me/${botUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 font-mono text-xs font-bold transition-all flex items-center gap-2 border border-blue-800/60"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Abrir @{botUsername}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Instructions to copy command manually if needed */}
+            <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
+              <h4 className="text-xs font-mono font-bold text-zinc-300 flex items-center gap-1.5">
+                <Terminal className="w-4 h-4 text-amber-400" />
+                Comando Rápido para Vincular Webhook desde Terminal o Navegador:
+              </h4>
+              <p className="text-[11px] text-zinc-400">
+                Si deseas registrarlo manualmente o verificar el certificado HTTPS de Render.com, puedes abrir esta URL en tu navegador reemplazando tu token:
+              </p>
+              <div className="p-2.5 rounded-lg bg-zinc-950 text-amber-300 font-mono text-xs border border-zinc-800 flex items-center justify-between">
+                <code className="truncate select-all mr-2">
+                  https://api.telegram.org/bot&lt;TU_TOKEN&gt;/setWebhook?url={renderWebhookUrl}
+                </code>
+                <button
+                  onClick={() => handleCopy(`https://api.telegram.org/bot<TU_TOKEN>/setWebhook?url=${renderWebhookUrl}`, 'cmd-webhook')}
+                  className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 shrink-0"
+                >
+                  {copiedKey === 'cmd-webhook' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       )}
 
       {/* SECTION 1: WALLET EXPRESS EN TELEGRAM */}
@@ -574,8 +838,14 @@ export const TelegramMiniAppHub: React.FC<TelegramMiniAppHubProps> = ({
                 <p className="text-zinc-300 text-[11px]">
                   Cuando BotFather pregunte por la URL de la Web App, pega:
                 </p>
-                <div className="p-2 rounded bg-zinc-900 text-[#00ff9d] text-[11px] border border-zinc-800 truncate">
-                  <code>https://go.botcaza.ai</code>
+                <div className="p-2 rounded bg-zinc-900 text-[#00ff9d] text-[11px] border border-zinc-800 truncate flex items-center justify-between">
+                  <code>{renderMiniAppUrl}</code>
+                  <button
+                    onClick={() => handleCopy(renderMiniAppUrl, 'botfather-url')}
+                    className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 ml-2"
+                  >
+                    {copiedKey === 'botfather-url' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  </button>
                 </div>
               </div>
             </div>

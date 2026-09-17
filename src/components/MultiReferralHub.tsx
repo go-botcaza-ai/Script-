@@ -545,18 +545,18 @@ export function MultiReferralHub({
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-mono font-medium">
                 <Globe className="w-3.5 h-3.5" />
-                SUITE GOOGLE &bull; SUITE MICROSOFT
+                SUITE GOOGLE &bull; MICROSOFT &bull; META BUSINESS
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Telemetría 100% Verificada en Servidor
+                Balanceo de Servidores &bull; Telemetría en Vivo
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
-              Red de Monetización &amp; <span className="text-blue-400">Google &amp; Microsoft Suite</span>
+              Red de Monetización &amp; <span className="text-blue-400">Multi-Cloud Suite</span>
             </h1>
             <p className="mt-2 text-zinc-400 text-sm sm:text-base max-w-2xl leading-relaxed">
-              Monetiza con el ecosistema de <strong>Google Ads &amp; AdSense (pub-9493850506792206)</strong>, <strong>Microsoft Suite</strong>, <strong>TeraBox TV</strong>, <strong>DODO DEX</strong> y <strong>Spotify</strong> con enlaces y métricas personalizadas.
+              Monetiza con el ecosistema integrado de <strong>Google Ads &amp; AdSense</strong>, <strong>Microsoft Suite</strong>, <strong>Meta Business</strong>, <strong>TeraBox TV</strong> y <strong>Spotify</strong> con enlaces protegidos y telemetría en tiempo real.
             </p>
           </div>
 

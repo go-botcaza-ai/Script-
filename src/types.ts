@@ -47,6 +47,7 @@ export interface AccessTokenState {
   userPhoto: string | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  authProvider?: 'google' | 'microsoft' | 'facebook' | null;
 }
 
 export interface AdminStats {

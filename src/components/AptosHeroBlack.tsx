@@ -16,6 +16,7 @@ import {
 interface AptosHeroBlackProps {
   onInitializeAgent: () => void;
   currentNetwork: string;
+  onOpenCloudConfig?: () => void;
 }
 
 interface BlockStreamItem {
@@ -28,7 +29,8 @@ interface BlockStreamItem {
 
 export const AptosHeroBlack: React.FC<AptosHeroBlackProps> = ({
   onInitializeAgent,
-  currentNetwork
+  currentNetwork,
+  onOpenCloudConfig
 }) => {
   const [streamData, setStreamData] = useState<BlockStreamItem[]>([
     { id: '1', blockHeight: 103001420, latency: '0.194s', txs: 419, timeAgo: '1s' },
@@ -90,12 +92,12 @@ export const AptosHeroBlack: React.FC<AptosHeroBlackProps> = ({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 relative z-10">
         
-        {/* Top Header Pill Bar (Reference Match) */}
+        {/* Top Header Pill Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold tracking-wider uppercase shadow-xs">
               <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" />
-              <span>Aptos Intelligence</span>
+              <span>IAgent<span className="text-[11px] font-normal lowercase text-white">botcaza</span></span>
             </div>
             <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-400/80">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -106,12 +108,18 @@ export const AptosHeroBlack: React.FC<AptosHeroBlackProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-zinc-400 border border-zinc-800 bg-zinc-900/90 px-2.5 py-1 rounded">
-              NeuraforgeAI &bull; Botcaza
+            <span className="text-[11px] font-mono text-zinc-300 border border-zinc-800 bg-zinc-900/90 px-2.5 py-1 rounded">
+              Multi-Cloud Engine Activo
             </span>
-            <span className="text-[11px] font-mono text-emerald-400 border border-emerald-900/60 bg-emerald-950/40 px-2.5 py-1 rounded">
-              GA4: G-24Q6GBQN75
-            </span>
+            {onOpenCloudConfig && (
+              <button
+                onClick={onOpenCloudConfig}
+                className="text-[11px] font-mono text-emerald-400 hover:text-white border border-emerald-900/60 bg-emerald-950/40 hover:bg-emerald-900/50 px-2.5 py-1 rounded transition-colors cursor-pointer flex items-center gap-1"
+                title="Abrir configuración de servidores Google, Microsoft y Meta"
+              >
+                <span>⚙️ Ver Servidores</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -124,37 +132,37 @@ export const AptosHeroBlack: React.FC<AptosHeroBlackProps> = ({
             {/* Tag Badge (Reference: BIGQUERY CONNECTED) */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-emerald-500/20 bg-emerald-950/30 text-emerald-400 text-xs font-mono">
               <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>BIGQUERY CONNECTED</span>
+              <span>BIGQUERY &bull; MULTI-CLOUD CONNECTED</span>
             </div>
 
-            {/* Main Headline (Reference Match: Aptos AI Analytics) */}
+            {/* Main Headline (IAgentbotcaza Analytics) */}
             <div className="space-y-1">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-none">
-                Aptos AI
+                IAgent<span className="text-3xl sm:text-4xl lg:text-5xl font-light text-[#00ff9d] lowercase ml-1">botcaza</span>
               </h1>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#00ff9d] leading-none drop-shadow-[0_0_25px_rgba(0,255,157,0.3)]">
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#00ff9d] leading-none drop-shadow-[0_0_25px_rgba(0,255,157,0.3)]">
                 Analytics
-              </h1>
+              </div>
             </div>
 
             {/* Subtitle Description */}
             <p className="text-base sm:text-lg text-zinc-400 max-w-xl leading-relaxed font-normal">
-              AI data analytics agent for the Aptos blockchain. Transform natural language into complex analytics in milliseconds.
+              Agente inteligente de analítica y automatización multi-servidor. Procesa consultas en lenguaje natural y distribuye cargas entre Google, Microsoft y Meta.
             </p>
 
-            {/* User Data & Monetization Callout */}
+            {/* Clean Server Architecture & Privacy Badge (No raw IDs exposed) */}
             <div className="p-3.5 rounded-lg bg-zinc-950/80 border border-zinc-800/80 flex flex-wrap items-center gap-4 text-xs font-mono text-zinc-300">
               <div className="flex items-center gap-1.5 text-emerald-400">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>AdSense: pub-9493850506792206</span>
+                <span>Servidores Seguros &bull; Balanceo Automático</span>
               </div>
               <span className="text-zinc-700 hidden sm:inline">&bull;</span>
               <div className="text-zinc-400">
-                Host: <span className="text-zinc-200">go.botcaza.ai</span>
+                Suite: <span className="text-zinc-200">Google &bull; Microsoft &bull; Meta</span>
               </div>
               <span className="text-zinc-700 hidden sm:inline">&bull;</span>
               <div className="text-emerald-400/90">
-                Ganancias Click-to-Earn Activas
+                Latencia Ultrabaja &lt; 20ms
               </div>
             </div>
 

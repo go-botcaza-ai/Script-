@@ -50,6 +50,7 @@ import { GrowthMarketingTrafficGuide } from './components/GrowthMarketingTraffic
 import { BotcazaWalletGatewayHub } from './components/BotcazaWalletGatewayHub';
 import { TelegramMiniAppHub } from './components/TelegramMiniAppHub';
 import { MultiReferralHub } from './components/MultiReferralHub';
+import { MultiCloudConfigModal } from './components/MultiCloudConfigModal';
 import { isInsideTelegram } from './lib/telegramWebApp';
 
 export default function App() {
@@ -69,6 +70,9 @@ export default function App() {
     | 'script'
     | 'admin'
   >('data-agent');
+
+  // Multi-Cloud Server Config Modal state
+  const [isCloudConfigOpen, setIsCloudConfigOpen] = useState(false);
 
   // Aptos network state
   const [currentNetwork, setCurrentNetwork] = useState<string>('mainnet');
@@ -133,13 +137,14 @@ export default function App() {
     }
 
     initAuth(
-      (user, token) => {
+      (user, token, provider) => {
         setAuthState({
           userEmail: user.email,
           userName: user.displayName,
           userPhoto: user.photoURL,
           accessToken: token,
           isAuthenticated: true,
+          authProvider: provider || 'google',
         });
       },
       () => {
@@ -149,6 +154,7 @@ export default function App() {
           userPhoto: null,
           accessToken: null,
           isAuthenticated: false,
+          authProvider: null,
         });
       }
     );
@@ -237,14 +243,14 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base font-black tracking-tight text-white leading-none">
-                    Neuraforge<span className="text-[#00ff9d]">AI</span>
+                    IAgent<span className="text-xs font-light text-[#00ff9d] lowercase ml-0.5">botcaza</span>
                   </span>
                   <span className="text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 px-1.5 py-0.5 rounded">
-                    Botcaza
+                    Enterprise
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-400 leading-none">
-                  Aptos Intelligence &bull; pub-9493850506792206
+                <span className="text-[10px] font-mono text-zinc-400 leading-none flex items-center gap-1">
+                  Multi-Cloud &bull; Google &bull; Microsoft &bull; Meta
                 </span>
               </div>
             </div>
@@ -261,7 +267,7 @@ export default function App() {
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
-                Aptos AI Analytics
+                <span>IAgent<span className="text-[10px] font-light lowercase text-emerald-300">botcaza</span></span>
               </button>
 
               <button
@@ -414,6 +420,7 @@ export default function App() {
               onAuthStateChange={setAuthState}
               isLoading={authLoading}
               setIsLoading={setAuthLoading}
+              onOpenCloudConfig={() => setIsCloudConfigOpen(true)}
             />
           </div>
         </div>
@@ -426,7 +433,7 @@ export default function App() {
               activeTab === 'data-agent' ? 'bg-[#00ff9d] text-black' : 'text-zinc-400'
             }`}
           >
-            Aptos Analytics
+            IAgent<span className="text-[10px] font-light lowercase">botcaza</span>
           </button>
           <button
             onClick={() => setActiveTab('wallet-gateway')}
@@ -521,6 +528,7 @@ export default function App() {
             <AptosHeroBlack
               onInitializeAgent={handleScrollToAgent}
               currentNetwork={currentNetwork}
+              onOpenCloudConfig={() => setIsCloudConfigOpen(true)}
             />
 
             {/* Interactive Google Data Agent Query & On-chain Studio */}
@@ -749,27 +757,38 @@ export default function App() {
       {/* Dark Footer */}
       <footer className="mt-auto border-t border-zinc-800/80 bg-black py-8 text-xs text-zinc-400 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <span className="text-white font-bold">NeuraforgeAI &bull; Botcaza Analytics</span>
-            <span className="text-zinc-600 mx-2">|</span>
-            <span>pub-9493850506792206</span>
-            <span className="text-zinc-600 mx-2">|</span>
-            <span>GA4: G-24Q6GBQN75</span>
-            <span className="text-zinc-600 mx-2">|</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-white font-bold">
+              IAgent<span className="text-[11px] font-light lowercase text-emerald-400">botcaza</span> Analytics Suite
+            </span>
+            <span className="text-zinc-700 mx-1">&bull;</span>
+            <button
+              onClick={() => setIsCloudConfigOpen(true)}
+              className="text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer flex items-center gap-1 underline underline-offset-2"
+            >
+              <span>⚙️ Servidores &amp; APIs Multi-Cloud</span>
+            </button>
+            <span className="text-zinc-700 mx-1">&bull;</span>
             <a href="mailto:go.botcaza.ai@gmail.com" className="text-emerald-400 hover:underline">
               go.botcaza.ai@gmail.com
             </a>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-zinc-400">
             <span className="text-emerald-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Mainnet Live
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Multi-Cloud Activo
             </span>
-            <span>BigQuery crypto_aptos</span>
-            <span>Gemini Data Agent</span>
-            <span>ads.txt Verificado</span>
+            <span>Google &bull; Microsoft &bull; Meta</span>
+            <span>Balanceo Automático</span>
           </div>
         </div>
       </footer>
+
+      {/* Multi-Cloud Server & API Configuration Modal */}
+      <MultiCloudConfigModal
+        isOpen={isCloudConfigOpen}
+        onClose={() => setIsCloudConfigOpen(false)}
+        authState={authState}
+      />
     </div>
   );
 }

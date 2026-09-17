@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
+  FacebookAuthProvider,
   onAuthStateChanged,
   signOut,
   User
@@ -42,6 +43,21 @@ microsoftProvider.setCustomParameters({
   prompt: 'select_account',
 });
 
+const facebookProvider = new FacebookAuthProvider();
+facebookProvider.addScope('email');
+facebookProvider.addScope('public_profile');
+
+/**
+ * Detects the active cloud provider (Google, Microsoft, Facebook)
+ */
+export const detectProviderId = (user?: User | null): 'google' | 'microsoft' | 'facebook' => {
+  if (!user) return 'google';
+  const pId = user.providerData[0]?.providerId || '';
+  if (pId.includes('microsoft')) return 'microsoft';
+  if (pId.includes('facebook')) return 'facebook';
+  return 'google';
+};
+
 // In-memory token storage (Do NOT store in localStorage per guidelines)
 let cachedAccessToken: string | null = null;
 let isSigningIn = false;
@@ -50,18 +66,18 @@ let isSigningIn = false;
  * Initializes auth listener. Sets state or invokes callbacks.
  */
 export const initAuth = (
-  onAuthSuccess?: (user: User, token: string) => void,
+  onAuthSuccess?: (user: User, token: string, provider: 'google' | 'microsoft' | 'facebook') => void,
   onAuthFailure?: () => void
 ) => {
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
+      const provider = detectProviderId(user);
       if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
+        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken, provider);
       } else if (!isSigningIn) {
-        // User logged in (or persisted session)
         const dummyToken = 'session-active-token';
         cachedAccessToken = dummyToken;
-        if (onAuthSuccess) onAuthSuccess(user, dummyToken);
+        if (onAuthSuccess) onAuthSuccess(user, dummyToken, provider);
       }
     } else {
       cachedAccessToken = null;
@@ -73,13 +89,13 @@ export const initAuth = (
 /**
  * Trigger Google Sign-In with popup
  */
-export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
+export const googleSignIn = async (): Promise<{ user: User; accessToken: string; provider: 'google' } | null> => {
   try {
     isSigningIn = true;
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     cachedAccessToken = credential?.accessToken || 'google-token-cached';
-    return { user: result.user, accessToken: cachedAccessToken };
+    return { user: result.user, accessToken: cachedAccessToken, provider: 'google' };
   } catch (error) {
     console.error('Error al iniciar sesión con Google:', error);
     throw error;
@@ -91,15 +107,33 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 /**
  * Trigger Microsoft Sign-In with popup
  */
-export const microsoftSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
+export const microsoftSignIn = async (): Promise<{ user: User; accessToken: string; provider: 'microsoft' } | null> => {
   try {
     isSigningIn = true;
     const result = await signInWithPopup(auth, microsoftProvider);
     const credential = OAuthProvider.credentialFromResult(result);
     cachedAccessToken = credential?.accessToken || 'microsoft-token-cached';
-    return { user: result.user, accessToken: cachedAccessToken };
+    return { user: result.user, accessToken: cachedAccessToken, provider: 'microsoft' };
   } catch (error) {
     console.error('Error al iniciar sesión con Microsoft:', error);
+    throw error;
+  } finally {
+    isSigningIn = false;
+  }
+};
+
+/**
+ * Trigger Facebook Business Sign-In with popup
+ */
+export const facebookSignIn = async (): Promise<{ user: User; accessToken: string; provider: 'facebook' } | null> => {
+  try {
+    isSigningIn = true;
+    const result = await signInWithPopup(auth, facebookProvider);
+    const credential = FacebookAuthProvider.credentialFromResult(result);
+    cachedAccessToken = credential?.accessToken || 'facebook-token-cached';
+    return { user: result.user, accessToken: cachedAccessToken, provider: 'facebook' };
+  } catch (error) {
+    console.error('Error al iniciar sesión con Facebook Business:', error);
     throw error;
   } finally {
     isSigningIn = false;

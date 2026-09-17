@@ -1,6 +1,6 @@
 import React from 'react';
-import { User, LogOut, CheckCircle2, ShieldCheck, Mail, Crown, Briefcase } from 'lucide-react';
-import { googleSignIn, microsoftSignIn, logout, isAppAdmin } from '../lib/auth';
+import { User, LogOut, CheckCircle2, ShieldCheck, Mail, Crown, Briefcase, Server } from 'lucide-react';
+import { googleSignIn, microsoftSignIn, facebookSignIn, logout, isAppAdmin } from '../lib/auth';
 import { AccessTokenState } from '../types';
 
 interface AuthBarProps {
@@ -9,13 +9,15 @@ interface AuthBarProps {
   isLoading: boolean;
   setIsLoading: (val: boolean) => void;
   onRequestLoginModal?: () => void;
+  onOpenCloudConfig?: () => void;
 }
 
 export const AuthBar: React.FC<AuthBarProps> = ({
   authState,
   onAuthStateChange,
   isLoading,
-  setIsLoading
+  setIsLoading,
+  onOpenCloudConfig
 }) => {
   const handleGoogleSignIn = async () => {
     try {
@@ -27,7 +29,8 @@ export const AuthBar: React.FC<AuthBarProps> = ({
           userName: res.user.displayName,
           userPhoto: res.user.photoURL,
           accessToken: res.accessToken,
-          isAuthenticated: true
+          isAuthenticated: true,
+          authProvider: 'google'
         });
       }
     } catch (err: any) {
@@ -57,7 +60,8 @@ export const AuthBar: React.FC<AuthBarProps> = ({
           userName: res.user.displayName,
           userPhoto: res.user.photoURL,
           accessToken: res.accessToken,
-          isAuthenticated: true
+          isAuthenticated: true,
+          authProvider: 'microsoft'
         });
       }
     } catch (err: any) {
@@ -79,6 +83,39 @@ export const AuthBar: React.FC<AuthBarProps> = ({
     }
   };
 
+  const handleFacebookSignIn = async () => {
+    try {
+      setIsLoading(true);
+      const res = await facebookSignIn();
+      if (res) {
+        onAuthStateChange({
+          userEmail: res.user.email,
+          userName: res.user.displayName,
+          userPhoto: res.user.photoURL,
+          accessToken: res.accessToken,
+          isAuthenticated: true,
+          authProvider: 'facebook'
+        });
+      }
+    } catch (err: any) {
+      console.error('Facebook login error:', err);
+      const code = err?.code || '';
+      if (code === 'auth/popup-blocked') {
+        alert('El navegador bloqueó la ventana emergente de Facebook. Por favor, permite ventanas emergentes (popups) para completar el inicio.');
+      } else if (code === 'auth/unauthorized-domain') {
+        alert('Dominio no autorizado en Firebase Console. Agrega este dominio en Firebase > Authentication > Settings > Authorized Domains.');
+      } else if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') {
+        alert('El proveedor Facebook aún no está activado en tu Firebase Console. Ve a Firebase Console > Authentication > Sign-in method > Facebook y agrega tu App ID y Secreto de developers.facebook.com.');
+      } else if (code === 'auth/popup-closed-by-user') {
+        // User closed popup
+      } else {
+        alert(err?.message || 'Error al conectar con Facebook Business.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       setIsLoading(true);
@@ -88,7 +125,8 @@ export const AuthBar: React.FC<AuthBarProps> = ({
         userName: null,
         userPhoto: null,
         accessToken: null,
-        isAuthenticated: false
+        isAuthenticated: false,
+        authProvider: null
       });
     } catch (err) {
       console.error('Logout error:', err);
@@ -100,19 +138,32 @@ export const AuthBar: React.FC<AuthBarProps> = ({
   const isAdmin = isAppAdmin(authState.userEmail);
 
   return (
-    <div id="auth-bar-container" className="flex items-center gap-2 sm:gap-3">
+    <div id="auth-bar-container" className="flex items-center gap-2 sm:gap-2.5">
+      {/* Botón de configuración de servidores multi-cloud */}
+      {onOpenCloudConfig && (
+        <button
+          id="btn-open-cloud-servers-config"
+          onClick={onOpenCloudConfig}
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-mono transition-colors cursor-pointer"
+          title="Ver infraestructura de Servidores Multi-Cloud & APIs"
+        >
+          <Server className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="hidden xl:inline text-[11px]">Servidores</span>
+        </button>
+      )}
+
       {authState.isAuthenticated && authState.userEmail ? (
-        <div id="user-profile-badge" className="flex items-center gap-2.5 bg-slate-900 border border-slate-700/80 text-white rounded-full py-1.5 px-3 shadow-sm">
+        <div id="user-profile-badge" className="flex items-center gap-2 bg-slate-900 border border-slate-700/80 text-white rounded-full py-1 px-2.5 shadow-sm">
           {authState.userPhoto ? (
             <img
               src={authState.userPhoto}
               alt={authState.userName || 'Usuario'}
-              className="w-7 h-7 rounded-full object-cover border border-slate-500 shrink-0"
+              className="w-6 h-6 rounded-full object-cover border border-slate-500 shrink-0"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-semibold shrink-0">
-              <User className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-semibold shrink-0">
+              <User className="w-3.5 h-3.5" />
             </div>
           )}
           <div className="text-left hidden sm:block leading-tight">
@@ -146,14 +197,14 @@ export const AuthBar: React.FC<AuthBarProps> = ({
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Botón Iniciar con Google */}
           <button
             id="btn-google-sign-in"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-3 py-1.5 rounded-lg font-medium text-xs transition-all shadow-xs active:scale-[0.99] cursor-pointer"
-            title="Iniciar sesión rápido con cuenta Google"
+            className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium text-xs transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            title="Iniciar sesión con suite Google (Gemini &amp; AdSense)"
           >
             <svg
               className="w-3.5 h-3.5 shrink-0"
@@ -173,10 +224,9 @@ export const AuthBar: React.FC<AuthBarProps> = ({
             id="btn-microsoft-sign-in"
             onClick={handleMicrosoftSignIn}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-[#2f2f2f] hover:bg-[#3b3b3b] text-white border border-zinc-700 px-3 py-1.5 rounded-lg font-medium text-xs transition-all shadow-xs active:scale-[0.99] cursor-pointer"
-            title="Iniciar sesión rápido con cuenta Microsoft Suite"
+            className="flex items-center gap-1.5 bg-[#2f2f2f] hover:bg-[#3b3b3b] text-white border border-zinc-700 px-2.5 py-1.5 rounded-lg font-medium text-xs transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            title="Iniciar sesión con suite Microsoft (Azure &amp; Bing)"
           >
-            {/* Official Microsoft 4-square logo */}
             <svg
               className="w-3.5 h-3.5 shrink-0"
               viewBox="0 0 21 21"
@@ -189,8 +239,27 @@ export const AuthBar: React.FC<AuthBarProps> = ({
             </svg>
             <span className="whitespace-nowrap hidden sm:inline">Microsoft</span>
           </button>
+
+          {/* Botón Iniciar con Facebook Business */}
+          <button
+            id="btn-facebook-sign-in"
+            onClick={handleFacebookSignIn}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 bg-[#1877F2] hover:bg-[#166fe5] text-white border border-blue-600 px-2.5 py-1.5 rounded-lg font-medium text-xs transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            title="Iniciar sesión con Facebook Business (Meta Suite)"
+          >
+            <svg
+              className="w-3.5 h-3.5 shrink-0 fill-current"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+            </svg>
+            <span className="whitespace-nowrap hidden sm:inline">Facebook</span>
+          </button>
         </div>
       )}
     </div>
   );
 };
+

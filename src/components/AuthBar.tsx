@@ -32,6 +32,16 @@ export const AuthBar: React.FC<AuthBarProps> = ({
       }
     } catch (err: any) {
       console.error('Login error:', err);
+      const code = err?.code || '';
+      if (code === 'auth/popup-blocked') {
+        alert('El navegador bloqueó la ventana emergente de Google. Por favor, permite ventanas emergentes (popups) en este sitio para iniciar sesión.');
+      } else if (code === 'auth/unauthorized-domain') {
+        alert('Dominio no autorizado en Firebase Console. Asegúrate de agregar este dominio en Firebase > Authentication > Settings > Authorized Domains.');
+      } else if (code === 'auth/popup-closed-by-user') {
+        // User closed popup, do nothing
+      } else {
+        alert(err?.message || 'Error al conectar con Google.');
+      }
     } finally {
       setIsLoading(false);
     }

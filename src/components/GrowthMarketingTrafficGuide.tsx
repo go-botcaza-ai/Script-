@@ -16,7 +16,14 @@ import {
   CheckCircle2,
   Code2,
   Github,
-  Award
+  Award,
+  Layers,
+  Zap,
+  Send,
+  Building,
+  Briefcase,
+  Users,
+  Video
 } from 'lucide-react';
 
 export const GrowthMarketingTrafficGuide: React.FC = () => {
@@ -291,6 +298,155 @@ export const GrowthMarketingTrafficGuide: React.FC = () => {
             <div className="p-3 rounded-lg bg-zinc-950 font-mono text-emerald-400 text-xs overflow-x-auto">
               <code>{TRACKING_URLS.meta}</code>
             </div>
+          </div>
+
+          {/* FLYER CORPORATIVO Y ESTRATEGIA DE DIFUSIÓN META */}
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-black border border-blue-500/40 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                    Estrategia Oficial para Meta
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Corporativo &bull; Emprendedores
+                  </span>
+                </div>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <Building className="w-5 h-5 text-cyan-400" />
+                  Flyer Corporativo &amp; Copywriting Dual (Empresas &bull; Emprendedores Digitales)
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-2xl">
+                  Diseñado para captar la atención tanto de directores corporativos como de creadores y emprendedores en Instagram, Facebook y LinkedIn.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleCopy(`🚀 NEURAFORGE AI & AI COLABORATIVA\n\nInvierte tu tiempo en lo que más importa para escalar tu negocio o proyecto.\n\n✨ MONETIZACIÓN & ESCALABILIDAD EN 3 PASOS:\n1️⃣ Registro ultrarrápido con Suite Google & Suite Microsoft en 1 clic.\n2️⃣ Crecimiento orgánico y lineal con agentes de IA colaborativa.\n3️⃣ Múltiples fuentes de ingresos: Videos Pay-Per-View, Telegram Mini Apps, Web Monetizada & Microsoft Apps.\n\n👉 Accede a la plataforma: https://go.botcaza.ai`, 'flyer_full')}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-mono text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 shrink-0"
+              >
+                {copiedLink === 'flyer_full' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedLink === 'flyer_full' ? '¡Flyer Copiado!' : 'Copiar Texto del Flyer'}</span>
+              </button>
+            </div>
+
+            {/* Visual Mockup of the Flyer */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-zinc-900 to-blue-950 p-6 sm:p-8 border border-cyan-500/30 shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
+              <div className="relative z-10 space-y-6">
+                
+                {/* Flyer Header */}
+                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-400 p-0.5 flex items-center justify-center">
+                      <div className="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-cyan-400" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-white tracking-wide">
+                        NEURAFORGE AI &amp; AI COLABORATIVA
+                      </h4>
+                      <p className="text-[11px] font-mono text-cyan-400">
+                        Ecosistema Autónomo de Crecimiento &amp; Monetización Digital
+                      </p>
+                    </div>
+                  </div>
+                  <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-mono font-bold">
+                    Suite 2026 Ready
+                  </span>
+                </div>
+
+                {/* Slogan */}
+                <div className="p-4 rounded-xl bg-black/60 border border-zinc-800/80">
+                  <p className="text-sm sm:text-base font-semibold text-zinc-100 italic text-center">
+                    &ldquo;Invierte tu tiempo en lo que más te importa para hacer crecer tu negocio o proyecto. Dentro de la suite NeuraForgeAI &amp; AI Colaborativa encontrarás diferentes formas de crecer tanto orgánicamente como de forma lineal.&rdquo;
+                  </p>
+                </div>
+
+                {/* 3 PASOS DE MONETIZACIÓN */}
+                <div className="space-y-3">
+                  <h5 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5" />
+                    Monetización &amp; Crecimiento en 3 Pasos Simples:
+                  </h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Paso 1 */}
+                    <div className="p-4 rounded-xl bg-zinc-950/80 border border-blue-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-mono text-xs font-bold flex items-center justify-center">
+                          1
+                        </span>
+                        <span className="text-[10px] font-mono text-blue-400 font-bold">ONBOARDING VELOZ</span>
+                      </div>
+                      <h6 className="text-xs font-bold text-white">Inicio con Google &amp; Microsoft Suite</h6>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Registro sin fricción en 1 solo clic. Conexión segura con tu cuenta de Google o Microsoft para activar tu perfil de afiliado y editor inmediatamente.
+                      </p>
+                    </div>
+
+                    {/* Paso 2 */}
+                    <div className="p-4 rounded-xl bg-zinc-950/80 border border-emerald-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="w-6 h-6 rounded-full bg-emerald-600 text-black font-mono text-xs font-bold flex items-center justify-center">
+                          2
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400 font-bold">ESCALA DUAL</span>
+                      </div>
+                      <h6 className="text-xs font-bold text-white">Crecimiento Orgánico y Lineal</h6>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Apalancamiento de algoritmos de redes sociales con IA colaborativa: genera contenido, scripts y señales on-chain que atraen tráfico calificado día tras día.
+                      </p>
+                    </div>
+
+                    {/* Paso 3 */}
+                    <div className="p-4 rounded-xl bg-zinc-950/80 border border-purple-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="w-6 h-6 rounded-full bg-purple-600 text-white font-mono text-xs font-bold flex items-center justify-center">
+                          3
+                        </span>
+                        <span className="text-[10px] font-mono text-purple-400 font-bold">MULTICANAL</span>
+                      </div>
+                      <h6 className="text-xs font-bold text-white">PayPerView, Telegram &amp; Microsoft</h6>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Monetiza con videos Pay-Per-View, bots y Mini Apps de Telegram (<code className="text-cyan-300">@Botcoins_Tradebot_Gamebot</code>), Google AdSense y micro-pagos directos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Percepción Dual: Corporativo vs Emprendedor */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5">
+                    <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold font-mono">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Para Directivos &amp; Corporativos:</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-300">
+                      Automatización segura, integración con BigQuery y Google Analytics 4 (GA4), auditoría de transacciones on-chain y cumplimiento de normativas sin depender de infraestructura pesada.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold font-mono">
+                      <Users className="w-4 h-4" />
+                      <span>Para Emprendedores &amp; Creadores:</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-300">
+                      Lanza una Mini App de Telegram en minutos, comparte enlaces de afiliados con un clic, vende acceso a videos exclusivos y cobra por publicidad sin saber programar.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Call to Action */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800 text-xs font-mono text-zinc-400">
+                  <span>Plataforma Oficial: <strong className="text-white">go.botcaza.ai</strong></span>
+                  <span>Mini App &amp; Webhook: <strong className="text-cyan-400">script-ads.onrender.com</strong></span>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
       )}

@@ -36,13 +36,63 @@ import {
   Globe,
   Cpu,
   BarChart3,
-  UserCheck
+  UserCheck,
+  Crown,
+  Briefcase,
+  Users,
+  Eye
 } from 'lucide-react';
 import { ReferralProgram, TeraBoxVideoShareItem, ReferralClickRecord, GoogleAffiliateProfile } from '../types';
 import { INITIAL_REFERRAL_PROGRAMS, SAMPLE_TERABOX_VIDEOS } from '../data/referralProgramsData';
 import { GoogleAffiliateOnboardingModal } from './GoogleAffiliateOnboardingModal';
+import { isAppAdmin } from '../lib/auth';
 
-export function MultiReferralHub() {
+export interface MultiReferralHubProps {
+  currentUserEmail?: string | null;
+  currentUserName?: string | null;
+}
+
+export function MultiReferralHub({
+  currentUserEmail,
+  currentUserName
+}: MultiReferralHubProps = {}) {
+  const isOwnerAdmin = isAppAdmin(currentUserEmail);
+
+  // User personal storage key
+  const userKey = currentUserEmail
+    ? currentUserEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')
+    : 'guest_user';
+
+  // Personal user stats (for new users, starts at strictly 0)
+  const [userPersonalStats, setUserPersonalStats] = useState<{
+    clicks: number;
+    estimatedEarningsUSD: number;
+    shares: number;
+    signups: number;
+    byProgram: Record<string, number>;
+  }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`botcaza_stats_${userKey}`);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return {
+      clicks: 0,
+      estimatedEarningsUSD: 0,
+      shares: 0,
+      signups: 0,
+      byProgram: {}
+    };
+  });
+
+  // Toggle for admin between aggregated network metrics and personal testing view
+  const [adminViewMode, setAdminViewMode] = useState<'network_aggregate' | 'personal_business'>(
+    isOwnerAdmin ? 'network_aggregate' : 'personal_business'
+  );
+
   // Guide Modal State
   const [showTeraBoxLoginGuide, setShowTeraBoxLoginGuide] = useState<boolean>(false);
   // Google 1-Click Affiliate Onboarding Modal State
@@ -58,10 +108,12 @@ export function MultiReferralHub() {
     }
     return {
       id: 'aff-goog-default',
-      email: 'go.botcaza.ai@gmail.com',
-      name: 'Botcaza AI Lead Publisher',
+      email: currentUserEmail || 'go.botcaza.ai@gmail.com',
+      name: currentUserName || 'Botcaza AI Lead Publisher',
       publisherId: 'pub-9493850506792206',
-      affiliateCode: 'GOOG-OA-PUB-949385',
+      affiliateCode: isOwnerAdmin
+        ? 'GOOG-OA-PUB-949385'
+        : `AFF-${(currentUserName || currentUserEmail?.split('@')[0] || 'SOCIO').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-2026`,
       registeredAt: new Date().toISOString(),
       status: 'ACTIVE_CERTIFIED',
       suiteServices: {
@@ -74,7 +126,11 @@ export function MultiReferralHub() {
       totalRealClicks: 0,
       totalRealEarningsUSD: 0,
       activeCampaignTag: 'google_suite_oa_pioneer',
-      trackingUrl: 'https://go.botcaza.ai/?utm_source=google_ads_partner&utm_medium=affiliate_oa&pub=pub-9493850506792206&aff=GOOG-OA-PUB-949385'
+      trackingUrl: `https://go.botcaza.ai/?utm_source=google_ads_partner&utm_medium=affiliate_oa&pub=pub-9493850506792206&aff=${
+        isOwnerAdmin
+          ? 'GOOG-OA-PUB-949385'
+          : `AFF-${(currentUserName || currentUserEmail?.split('@')[0] || 'SOCIO').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-2026`
+      }`
     };
   });
 
@@ -278,7 +334,7 @@ export function MultiReferralHub() {
     // Update Click History
     setClickHistory((prev) => [newRecord, ...prev.slice(0, 49)]);
 
-    // Update Program Stats
+    // Update Global Program Stats
     setPrograms((prev) =>
       prev.map((p) => {
         if (p.id === programId) {
@@ -294,6 +350,23 @@ export function MultiReferralHub() {
         return p;
       })
     );
+
+    // Update User Personal Stats (starts at 0 for new user, increments on their real promo)
+    setUserPersonalStats((prev) => {
+      const updated = {
+        ...prev,
+        clicks: prev.clicks + 1,
+        estimatedEarningsUSD: Number((prev.estimatedEarningsUSD + earnings).toFixed(3)),
+        byProgram: {
+          ...prev.byProgram,
+          [programId]: (prev.byProgram[programId] || 0) + 1
+        }
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`botcaza_stats_${userKey}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
 
     // Send click to backend API
     try {
@@ -328,11 +401,19 @@ export function MultiReferralHub() {
     handleRecordClick('terabox', url, 'whatsapp');
   };
 
-  // Global Totals
+  // Global Totals vs Personal Totals
   const totalClicks = programs.reduce((acc, p) => acc + p.stats.clicks, 0);
   const totalEarningsUSD = programs.reduce((acc, p) => acc + p.stats.estimatedEarningsUSD, 0);
   const totalShares = programs.reduce((acc, p) => acc + p.stats.shares, 0);
   const totalSignups = programs.reduce((acc, p) => acc + p.stats.signups, 0);
+
+  // Active Perspective
+  const isShowingAggregate = isOwnerAdmin && adminViewMode === 'network_aggregate';
+  const displayedClicks = isShowingAggregate ? totalClicks : userPersonalStats.clicks;
+  const displayedEarningsUSD = isShowingAggregate ? totalEarningsUSD : userPersonalStats.estimatedEarningsUSD;
+
+  // Microsoft Developers Guide Modal State
+  const [showMicrosoftDevGuide, setShowMicrosoftDevGuide] = useState<boolean>(false);
 
   // TeraBox specific program
   const teraboxProgram = programs.find((p) => p.id === 'terabox') || programs[0];
@@ -354,6 +435,106 @@ export function MultiReferralHub() {
         </div>
       )}
 
+      {/* MODAL: GUÍA MICROSOFT DEVELOPERS & AZURE ENTRA ID */}
+      {showMicrosoftDevGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-blue-500/40 rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                  <svg className="w-5 h-5" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Trámite y Configuración: Iniciar Sesión con Microsoft
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-mono">
+                    Microsoft Entra ID (Azure Portal) + Firebase Authentication
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMicrosoftDevGuide(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              <div className="p-4 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200 space-y-1">
+                <p className="font-bold text-white">¿Necesitas pagar o tramitar una cuenta developers de pago?</p>
+                <p className="text-xs">
+                  <strong>No. Es 100% gratuito.</strong> Solo requieres una cuenta Microsoft habitual para acceder a <strong>Azure Portal</strong> (Microsoft Entra ID) y registrar tu App.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-bold text-white font-mono text-xs uppercase tracking-wider text-amber-400">
+                  Paso a paso para habilitarlo en 5 minutos:
+                </h4>
+
+                <div className="space-y-3 font-mono text-xs">
+                  <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-1">
+                    <div className="text-white font-bold flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+                      Ingresa a Microsoft Azure Portal
+                    </div>
+                    <p className="text-zinc-400 text-[11px]">
+                      Entra a <a href="https://portal.azure.com/" target="_blank" rel="noreferrer" className="text-blue-400 underline">portal.azure.com</a> e inicia sesión con tu cuenta Microsoft.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-1">
+                    <div className="text-white font-bold flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span>
+                      Registra tu Aplicación (App Registration)
+                    </div>
+                    <p className="text-zinc-400 text-[11px]">
+                      Busca <strong>Microsoft Entra ID</strong> &rarr; <strong>App registrations</strong> &rarr; <strong>New registration</strong>. Asigna el nombre (ej: <em>NeuraForge Botcaza</em>) y en tipos de cuenta selecciona: <em>Cuentas en cualquier directorio organizativo y cuentas personales de Microsoft (Skype, Xbox, Outlook.com)</em>.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-1">
+                    <div className="text-white font-bold flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">3</span>
+                      Genera tu Client Secret
+                    </div>
+                    <p className="text-zinc-400 text-[11px]">
+                      Dentro de tu app en Azure, ve a <strong>Certificates &amp; secrets</strong> &rarr; <strong>New client secret</strong>. Copia el <em>Value</em> generado y el <em>Application (client) ID</em> de la pestaña Overview.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black border border-zinc-800 space-y-1">
+                    <div className="text-white font-bold flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">4</span>
+                      Habilita Microsoft en Firebase Console
+                    </div>
+                    <p className="text-zinc-400 text-[11px]">
+                      En <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-blue-400 underline">console.firebase.google.com</a> ve a <strong>Authentication</strong> &rarr; <strong>Sign-in method</strong> &rarr; Añadir proveedor &rarr; <strong>Microsoft</strong>. Pega tu <em>Application ID</em> y <em>Client Secret</em>. Copia la URL de redirección que te da Firebase y pégala en Azure en <em>Authentication &gt; Add a platform &gt; Web &gt; Redirect URIs</em>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-zinc-800">
+              <button
+                onClick={() => setShowMicrosoftDevGuide(false)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Entendido, Cerrar Guía
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TOP HERO BANNER */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900 to-black border border-zinc-800 p-6 sm:p-8 shadow-2xl">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -364,34 +545,48 @@ export function MultiReferralHub() {
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-mono font-medium">
                 <Globe className="w-3.5 h-3.5" />
-                GOOGLE SUITE &bull; ERA DE LA OA
+                SUITE GOOGLE &bull; SUITE MICROSOFT
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Métricas 100% Reales de Servidor (Nada Simulado)
+                Telemetría 100% Verificada en Servidor
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
-              Red de Monetización &amp; <span className="text-blue-400">Google Suite Ads</span>
+              Red de Monetización &amp; <span className="text-blue-400">Google &amp; Microsoft Suite</span>
             </h1>
             <p className="mt-2 text-zinc-400 text-sm sm:text-base max-w-2xl leading-relaxed">
-              Monetiza con el ecosistema pionero de <strong>Google Ads &amp; AdSense (pub-9493850506792206)</strong> en la era OA, más <strong>TeraBox TV</strong>, <strong>Microsoft Bing</strong>, <strong>DODO DEX</strong> y <strong>Spotify</strong> con telemetría en tiempo real.
+              Monetiza con el ecosistema de <strong>Google Ads &amp; AdSense (pub-9493850506792206)</strong>, <strong>Microsoft Suite</strong>, <strong>TeraBox TV</strong>, <strong>DODO DEX</strong> y <strong>Spotify</strong> con enlaces y métricas personalizadas.
             </p>
           </div>
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => setShowGoogleAffiliateModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 text-xs sm:text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 border border-white/80"
+              onClick={() => setShowMicrosoftDevGuide(true)}
+              className="flex items-center gap-2 px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium rounded-xl border border-zinc-700 transition-all active:scale-95 cursor-pointer"
+              title="Ver instrucciones de cuenta developers y configuración de Azure"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0">
+              <svg className="w-4 h-4" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+                <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+                <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+                <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+              </svg>
+              <span>Guía Microsoft Dev</span>
+            </button>
+
+            <button
+              onClick={() => setShowGoogleAffiliateModal(true)}
+              className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 border border-white/80 cursor-pointer"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-              Afiliarme con Google
+              Afiliarme
             </button>
 
             <button
@@ -402,51 +597,128 @@ export function MultiReferralHub() {
                   'web_direct'
                 );
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer"
             >
-              <MousePointer className="w-4 h-4" />
-              Probar Clic Real (CPC +$$)
+              <MousePointer className="w-3.5 h-3.5" />
+              Probar Clic Real
             </button>
 
             <button
               onClick={() => {
-                const summary = `📊 *Resumen de Afiliación & Telemetría Real Neuraforge*\n• Ganancias Reales: $${totalEarningsUSD.toFixed(2)} USD\n• Clics Reales Servidor: ${totalClicks}\n• Google Publisher: ${googleAffiliateProfile?.publisherId || 'pub-9493850506792206'}\n• Afiliado OA: ${googleAffiliateProfile?.affiliateCode || 'GOOG-OA-PUB-949385'}\n🔗 ${googleAffiliateProfile?.trackingUrl || 'https://go.botcaza.ai'}`;
+                const summary = `📊 *Resumen de Afiliación & Telemetría Real Neuraforge*\n• Modo: ${isShowingAggregate ? 'Red Global Todos los Afiliados' : 'Negocio Personal'}\n• Ganancias: $${displayedEarningsUSD.toFixed(2)} USD\n• Clics Registrados: ${displayedClicks}\n• Google Publisher: ${googleAffiliateProfile?.publisherId || 'pub-9493850506792206'}\n• Afiliado: ${googleAffiliateProfile?.affiliateCode || 'GOOG-OA-PUB-949385'}\n🔗 ${googleAffiliateProfile?.trackingUrl || 'https://go.botcaza.ai'}`;
                 handleCopy(summary, 'global-summary');
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs sm:text-sm font-medium rounded-xl border border-zinc-700 transition-all active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium rounded-xl border border-zinc-700 transition-all active:scale-95 cursor-pointer"
             >
-              {copiedId === 'global-summary' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copiedId === 'global-summary' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               Copiar Resumen
             </button>
           </div>
         </div>
 
-        {/* STATS COUNTERS GRID - 100% REAL TELEMETRY */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-zinc-800/80">
+        {/* ROLE INDICATOR & PERSPECTIVE SWITCHER */}
+        <div className="mt-6 pt-6 border-t border-zinc-800/80">
+          {isOwnerAdmin ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-zinc-900 to-black border border-amber-500/30">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-2">
+                    <span>Sesión de Propietario &bull; {currentUserEmail || 'go.botcaza.ai@gmail.com'}</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                      Admin Propietario
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    {adminViewMode === 'network_aggregate'
+                      ? 'Visualizando la telemetría acumulada de TODOS los usuarios y afiliados de la red.'
+                      : 'Modo simulación de Nuevo Afiliado: Métricas iniciales en 0 para promocionar tu negocio.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setAdminViewMode('network_aggregate')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    adminViewMode === 'network_aggregate'
+                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+                      : 'bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-700'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  Todos los Afiliados ({totalClicks} clics)
+                </button>
+                <button
+                  onClick={() => setAdminViewMode('personal_business')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    adminViewMode === 'personal_business'
+                      ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+                      : 'bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-700'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  Vista Nuevo Usuario (Base 0)
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-950/40 via-zinc-900 to-black border border-blue-500/30">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-2">
+                    <span>Métricas de tu Negocio &bull; {currentUserName || currentUserEmail || 'Nuevo Emprendedor'}</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase">
+                      Base Cero
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Tus métricas inician en 0. Comparte tus enlaces en redes sociales (Meta, TikTok, Telegram) para hacer crecer tus visitas y comisiones.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-left sm:text-right shrink-0">
+                <span className="text-[10px] font-mono text-cyan-400 block">TU CÓDIGO DE AFILIADO:</span>
+                <span className="text-xs font-mono font-bold text-white">{googleAffiliateProfile?.affiliateCode}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* STATS COUNTERS GRID - DYNAMIC ACCORDING TO USER ROLE */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-800/80">
           <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
             <div className="flex items-center justify-between text-zinc-400 text-xs font-mono">
-              <span>INGRESOS REALES ESTIMADOS</span>
+              <span>{isShowingAggregate ? 'INGRESOS RED GLOBAL' : 'TUS INGRESOS ESTIMADOS'}</span>
               <DollarSign className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="mt-2 text-2xl sm:text-3xl font-black text-[#00ff9d] font-mono">
-              ${totalEarningsUSD.toFixed(2)}
+              ${displayedEarningsUSD.toFixed(2)}
               <span className="text-xs text-zinc-400 font-sans ml-1">USD</span>
             </div>
             <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Calculado con clics reales en servidor
+              {isShowingAggregate ? 'Acumulado de todos los afiliados' : 'Tus ingresos generados'}
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
             <div className="flex items-center justify-between text-zinc-400 text-xs font-mono">
-              <span>CLICS TOTALES REALES</span>
+              <span>{isShowingAggregate ? 'CLICS RED GLOBAL' : 'TUS CLICS DE PROMOCIÓN'}</span>
               <MousePointer className="w-4 h-4 text-blue-400" />
             </div>
             <div className="mt-2 text-2xl sm:text-3xl font-black text-white font-mono">
-              {totalClicks.toLocaleString()}
+              {displayedClicks.toLocaleString()}
             </div>
-            <div className="text-[11px] text-blue-400 mt-1">Telemetría verificada en /api/referrals</div>
+            <div className="text-[11px] text-blue-400 mt-1">
+              {isShowingAggregate ? 'Telemetría total en /api/referrals' : 'Tus clics registrados'}
+            </div>
           </div>
 
           <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/60">

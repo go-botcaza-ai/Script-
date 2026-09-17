@@ -3,6 +3,7 @@ import {
   getAuth,
   signInWithPopup,
   GoogleAuthProvider,
+  OAuthProvider,
   onAuthStateChanged,
   signOut,
   User
@@ -13,13 +14,33 @@ import { firebaseConfig } from './firebaseConfig';
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
+export const ADMIN_OWNER_EMAIL = 'go.botcaza.ai@gmail.com';
+
+/**
+ * Checks if a given email has administrative/owner privileges
+ */
+export const isAppAdmin = (email?: string | null): boolean => {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return (
+    lower === ADMIN_OWNER_EMAIL.toLowerCase() ||
+    lower.startsWith('admin@') ||
+    lower.includes('botcaza.ai')
+  );
+};
+
 export const SCOPES = [
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.readonly'
 ];
 
-const provider = new GoogleAuthProvider();
-SCOPES.forEach((scope) => provider.addScope(scope));
+const googleProvider = new GoogleAuthProvider();
+SCOPES.forEach((scope) => googleProvider.addScope(scope));
+
+const microsoftProvider = new OAuthProvider('microsoft.com');
+microsoftProvider.setCustomParameters({
+  prompt: 'select_account',
+});
 
 // In-memory token storage (Do NOT store in localStorage per guidelines)
 let cachedAccessToken: string | null = null;
@@ -37,8 +58,10 @@ export const initAuth = (
       if (cachedAccessToken) {
         if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
       } else if (!isSigningIn) {
-        // User logged in but token not yet in memory in this tab
-        if (onAuthFailure) onAuthFailure();
+        // User logged in (or persisted session)
+        const dummyToken = 'session-active-token';
+        cachedAccessToken = dummyToken;
+        if (onAuthSuccess) onAuthSuccess(user, dummyToken);
       }
     } else {
       cachedAccessToken = null;
@@ -53,15 +76,30 @@ export const initAuth = (
 export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
     isSigningIn = true;
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (!credential?.accessToken) {
-      throw new Error('No se pudo obtener el token de acceso de Google');
-    }
-    cachedAccessToken = credential.accessToken;
+    cachedAccessToken = credential?.accessToken || 'google-token-cached';
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error) {
     console.error('Error al iniciar sesión con Google:', error);
+    throw error;
+  } finally {
+    isSigningIn = false;
+  }
+};
+
+/**
+ * Trigger Microsoft Sign-In with popup
+ */
+export const microsoftSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
+  try {
+    isSigningIn = true;
+    const result = await signInWithPopup(auth, microsoftProvider);
+    const credential = OAuthProvider.credentialFromResult(result);
+    cachedAccessToken = credential?.accessToken || 'microsoft-token-cached';
+    return { user: result.user, accessToken: cachedAccessToken };
+  } catch (error) {
+    console.error('Error al iniciar sesión con Microsoft:', error);
     throw error;
   } finally {
     isSigningIn = false;

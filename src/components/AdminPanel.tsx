@@ -13,23 +13,29 @@ import {
   Mail,
   Shield,
   Search,
-  Filter
+  Filter,
+  Crown,
+  Briefcase
 } from 'lucide-react';
 import { ContentItem, PurchaseRecord } from '../types';
+import { isAppAdmin } from '../lib/auth';
 
 interface AdminPanelProps {
   contentItems: ContentItem[];
   purchases: PurchaseRecord[];
   onAddNewContent: (newItem: ContentItem) => void;
   onDeleteItem: (id: string) => void;
+  currentUserEmail?: string | null;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
   contentItems,
   purchases,
   onAddNewContent,
-  onDeleteItem
+  onDeleteItem,
+  currentUserEmail
 }) => {
+  const isAdmin = isAppAdmin(currentUserEmail);
   const [showAddForm, setShowAddForm] = useState(false);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'video' | 'course' | 'event' | 'masterclass'>('video');
@@ -87,6 +93,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   return (
     <div id="admin-management-panel" className="space-y-6">
+      {/* Role Banner: Propietario / Admin vs Afiliado */}
+      <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        isAdmin
+          ? 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-300'
+          : 'bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border-blue-200'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+            isAdmin
+              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+              : 'bg-blue-100 text-blue-800 border border-blue-300'
+          }`}>
+            {isAdmin ? <Crown className="w-5 h-5" /> : <Briefcase className="w-5 h-5" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-900">
+                {isAdmin ? 'Consola Master del Propietario & Administrador' : 'Consola de Afiliado / Colaborador'}
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                isAdmin
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                  : 'bg-blue-100 text-blue-800 border border-blue-300'
+              }`}>
+                {isAdmin ? 'PROPIETARIO &bull; ACCESO GLOBAL' : 'AFILIADO &bull; BASE PERSONAL'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isAdmin
+                ? `Bienvenido ${currentUserEmail || 'Propietario'}. Tienes acceso a la telemetría agregada de todos los usuarios y gestión total del catálogo.`
+                : 'Métricas asignadas a tu cuenta para promocionar tu negocio y gestionar contenido autorizado.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Top metric overview cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">

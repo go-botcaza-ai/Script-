@@ -563,7 +563,10 @@ export default function App() {
         {/* TAB 1.9: MULTI-REFERRAL HUB & TERABOX TV */}
         {activeTab === 'multi-referrals' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <MultiReferralHub />
+            <MultiReferralHub
+              currentUserEmail={authState.userEmail}
+              currentUserName={authState.userName}
+            />
           </div>
         )}
 
@@ -716,6 +719,7 @@ export default function App() {
               purchases={purchasedRecords}
               onAddNewContent={handleAddNewContent}
               onDeleteItem={handleDeleteContent}
+              currentUserEmail={authState.userEmail}
             />
           </div>
         )}
